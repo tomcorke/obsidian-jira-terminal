@@ -2,7 +2,7 @@
  * TerminalPanelView - wraps TabManager with Claude launch buttons,
  * state aggregation, session resume, tab context menu, and inline rename.
  */
-import { Menu } from "obsidian";
+import { Menu, Notice } from "obsidian";
 import type { Plugin } from "obsidian";
 import { TabManager } from "../core/terminal/TabManager";
 import type { TerminalTab, ClaudeState } from "../core/terminal/TerminalTab";
@@ -360,10 +360,16 @@ export class TerminalPanelView {
 
   private spawnClaudeWithContext(): void {
     const activeItemId = this.tabManager.getActiveItemId();
-    if (!activeItemId) return;
+    if (!activeItemId) {
+      new Notice("Select a task first to launch Claude with context");
+      return;
+    }
 
     const item = this.allItems.find((i) => i.id === activeItemId);
-    if (!item) return;
+    if (!item) {
+      new Notice("Could not find the selected task");
+      return;
+    }
 
     const prompt = this.promptBuilder.buildPrompt(item, item.path);
     const claudeCmd = this.settings["core.claudeCommand"] || "claude";
