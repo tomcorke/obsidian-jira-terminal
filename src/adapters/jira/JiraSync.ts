@@ -160,17 +160,13 @@ export class JiraSync {
       issuesByKey.set(issue.key, issue);
     }
 
-    // Find existing cache files
+    // Find existing cache files (including _stale/ so we can reclaim them)
     const existingFiles = new Map<string, TFile>();
-    for (const col of KANBAN_COLUMNS) {
-      const folderPath = `${this.basePath}/${COLUMN_FOLDERS[col]}`;
-      const files = this.app.vault
-        .getMarkdownFiles()
-        .filter((f) => f.path.startsWith(folderPath + "/"));
-      for (const file of files) {
-        const key = file.basename; // filename without .md = JIRA key
-        existingFiles.set(key, file);
-      }
+    const allCacheFiles = this.app.vault
+      .getMarkdownFiles()
+      .filter((f) => f.path.startsWith(this.basePath + "/"));
+    for (const file of allCacheFiles) {
+      existingFiles.set(file.basename, file);
     }
 
     // Create or update
@@ -178,10 +174,13 @@ export class JiraSync {
       await this.reconcileOne(issue, existingFiles.get(issue.key));
     }
 
-    // Mark stale: files in cache but not in API results
-    // (Don't delete - move to _stale folder for manual review)
+    // Mark stale: files in column folders but not in API results.
+    // Skip files already in _stale/. Don't delete - move for manual review.
     for (const [key, file] of existingFiles) {
-      if (!issuesByKey.has(key)) {
+      if (issuesByKey.has(key)) continue;
+      if (file.path.includes("/_stale/")) continue;
+
+      try {
         const stalePath = `${this.basePath}/_stale/${file.name}`;
         const staleFolder = this.app.vault.getAbstractFileByPath(`${this.basePath}/_stale`);
         if (!staleFolder) {
@@ -189,6 +188,8 @@ export class JiraSync {
         }
         console.log("[jira-terminal] Staling:", key);
         await this.app.vault.rename(file, stalePath);
+      } catch (err: any) {
+        console.warn("[jira-terminal] Failed to stale", key, ":", err.message);
       }
     }
   }
@@ -198,21 +199,41 @@ export class JiraSync {
     const targetPath = getCacheFilePath(this.basePath, targetColumn, issue.key);
 
     if (!existingFile) {
-      // Search across all columns
-      for (const col of KANBAN_COLUMNS) {
-        const path = getCacheFilePath(this.basePath, col, issue.key);
-        const file = this.app.vault.getAbstractFileByPath(path);
-        if (file) {
-          existingFile = file as TFile;
-          break;
-        }
+      // Search everywhere under basePath (columns, _stale, etc.)
+      const found = this.app.vault
+        .getMarkdownFiles()
+        .find((f) => f.path.startsWith(this.basePath + "/") && f.basename === issue.key);
+      if (found) {
+        existingFile = found;
+      }
+    }
+
+    if (!existingFile) {
+      // Double-check the target path doesn't already exist (vault state may
+      // be stale if another sync just created it)
+      const targetFile = this.app.vault.getAbstractFileByPath(targetPath);
+      if (targetFile) {
+        existingFile = targetFile as TFile;
       }
     }
 
     if (!existingFile) {
       // New issue - create cache file
       const content = generateCacheContent(issue);
-      await this.app.vault.create(targetPath, content);
+      try {
+        await this.app.vault.create(targetPath, content);
+      } catch (err: any) {
+        // Handle race: file was created between our check and create
+        if (err.message?.includes("already exists")) {
+          console.log("[jira-terminal] File already exists, will update:", issue.key);
+          const file = this.app.vault.getAbstractFileByPath(targetPath);
+          if (file) {
+            await this.app.vault.modify(file as TFile, content);
+          }
+        } else {
+          throw err;
+        }
+      }
       console.log("[jira-terminal] Created cache:", issue.key);
       return;
     }

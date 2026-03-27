@@ -49,6 +49,11 @@ export class JiraAdapter extends BaseAdapter {
    * createParser/createMover. Starts JiraSync with real settings.
    */
   async onLoad(app: App, settings: Record<string, unknown>): Promise<void> {
+    // Stop any previous sync polling (important during hot-reload)
+    if (this.sync) {
+      this.sync.stopPolling();
+    }
+
     const s = settings as Record<string, any>;
     this.sync = new JiraSync(app, s);
 
