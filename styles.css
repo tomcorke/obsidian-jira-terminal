@@ -402,7 +402,7 @@
 
 .wt-tab-bar {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   border-bottom: 1px solid var(--background-modifier-border);
   min-height: 34px;
   flex-shrink: 0;
@@ -422,7 +422,8 @@
   display: flex;
   gap: 4px;
   padding: 1px 4px 0;
-  align-items: flex-start;
+  align-items: flex-end;
+  align-self: flex-end;
   flex-shrink: 0;
 }
 
