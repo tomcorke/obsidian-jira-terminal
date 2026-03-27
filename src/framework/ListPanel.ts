@@ -62,7 +62,7 @@ export class ListPanel {
     terminalPanel: TerminalPanelView,
     settings: Record<string, any>,
     onSelect: (item: WorkItem | null) => void,
-    onCustomOrderChange: (order: Record<string, string[]>) => void
+    onCustomOrderChange: (order: Record<string, string[]>) => void,
   ) {
     this.adapter = adapter;
     this.cardRenderer = cardRenderer;
@@ -124,7 +124,10 @@ export class ListPanel {
       const sortedItems = this.sortItems(colItems, col.id);
 
       // Section container
-      const sectionEl = this.listEl.createDiv({ cls: "wt-section", attr: { "data-column": col.id } });
+      const sectionEl = this.listEl.createDiv({
+        cls: "wt-section",
+        attr: { "data-column": col.id },
+      });
 
       // Section header
       const headerEl = sectionEl.createDiv({ cls: "wt-section-header" });
@@ -133,7 +136,10 @@ export class ListPanel {
       const collapseIcon = headerEl.createSpan({ cls: "wt-collapse-icon" });
       collapseIcon.textContent = this.collapsedSections.has(col.id) ? "\u25b6" : "\u25bc";
 
-      headerEl.createSpan({ text: `${col.label} (${sortedItems.length})`, cls: "wt-section-label" });
+      headerEl.createSpan({
+        text: `${col.label} (${sortedItems.length})`,
+        cls: "wt-section-label",
+      });
 
       headerEl.addEventListener("click", () => {
         if (this.collapsedSections.has(col.id)) {
@@ -208,7 +214,10 @@ export class ListPanel {
       // Re-insert any active placeholders for this column
       for (const [path, placeholderEl] of this.placeholders) {
         // Simple heuristic: add placeholder to first visible column
-        if (cardsEl.children.length === 0 || col.id === this.adapter.config.creationColumns.find(c => c.default)?.id) {
+        if (
+          cardsEl.children.length === 0 ||
+          col.id === this.adapter.config.creationColumns.find((c) => c.default)?.id
+        ) {
           cardsEl.appendChild(placeholderEl);
         }
       }
@@ -347,7 +356,11 @@ export class ListPanel {
     return vaultPath;
   }
 
-  private async insertAfter(existingId: string, newItem: WorkItem, columnId: string): Promise<void> {
+  private async insertAfter(
+    existingId: string,
+    newItem: WorkItem,
+    columnId: string,
+  ): Promise<void> {
     if (!this.adapter.onItemCreated) {
       console.warn("[work-terminal] insertAfter: adapter has no onItemCreated");
       return;
@@ -414,10 +427,19 @@ export class ListPanel {
   }
 
   private deleteItem(item: WorkItem): void {
-    new DangerConfirm(this.app, `Delete "${item.title}"`, async () => {
-      const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
-      if (!file) return;
-      await this.app.vault.trash(file, false);
+    new DangerConfirm(this.app, `Delete "${item.title}"`, () => {
+      void (async () => {
+        // Let adapter intercept deletion (e.g. API-backed items)
+        if (this.adapter.onDelete) {
+          const proceed = await this.adapter.onDelete(item);
+          if (!proceed) return;
+        }
+        const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
+        if (!file) return;
+        await this.app.vault.trash(file, false);
+      })().catch((err) => {
+        console.error("[work-terminal] deleteItem failed:", err);
+      });
     }).open();
   }
 
@@ -442,7 +464,12 @@ export class ListPanel {
     });
   }
 
-  private setupDropZone(cardsEl: HTMLElement, sectionEl: HTMLElement, headerEl: HTMLElement, columnId: string): void {
+  private setupDropZone(
+    cardsEl: HTMLElement,
+    sectionEl: HTMLElement,
+    headerEl: HTMLElement,
+    columnId: string,
+  ): void {
     // Auto-expand collapsed sections on drag-over
     headerEl.addEventListener("dragover", (e: DragEvent) => {
       e.preventDefault();
@@ -671,9 +698,7 @@ export class ListPanel {
         menu.addSeparator();
       } else {
         menu.addItem((menuItem) => {
-          menuItem
-            .setTitle(ai.title || "Action")
-            .onClick(() => ai.callback?.());
+          menuItem.setTitle(ai.title || "Action").onClick(() => ai.callback?.());
         });
       }
     }
@@ -722,7 +747,7 @@ export class ListPanel {
       // Remove existing badges
       cardEl.querySelectorAll(".wt-session-badge").forEach((el) => el.remove());
       cardEl.querySelectorAll(".wt-resume-badge").forEach((el) => el.remove());
-      const actionsEl = cardEl.querySelector(".wt-card-actions") as HTMLElement || cardEl;
+      const actionsEl = (cardEl.querySelector(".wt-card-actions") as HTMLElement) || cardEl;
       // Insert badges before move-to-top button so order is: badges | move-to-top
       const moveBtn = actionsEl.querySelector(".wt-move-to-top");
       this.renderSessionBadges(actionsEl, item);
@@ -738,8 +763,9 @@ export class ListPanel {
     this.placeholders.set(path, placeholderEl);
 
     // Add to first visible cards container
-    const defaultCol = this.adapter.config.creationColumns.find((c) => c.default)?.id
-      || this.adapter.config.columns[0]?.id;
+    const defaultCol =
+      this.adapter.config.creationColumns.find((c) => c.default)?.id ||
+      this.adapter.config.columns[0]?.id;
     const cardsEl = this.listEl.querySelector(`[data-column="${defaultCol}"] .wt-section-cards`);
     if (cardsEl) {
       cardsEl.appendChild(placeholderEl);

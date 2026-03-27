@@ -38,7 +38,7 @@ export class SessionPersistence {
    */
   static async saveToDisk(
     plugin: DataPlugin,
-    sessions: Map<string, PersistableTab[]>
+    sessions: Map<string, PersistableTab[]>,
   ): Promise<void> {
     const persisted: PersistedSession[] = [];
     for (const [taskPath, tabs] of sessions) {
@@ -66,19 +66,13 @@ export class SessionPersistence {
    * Load persisted Claude session metadata from disk.
    * Filters out sessions older than 7 days (Claude's default retention).
    */
-  static async loadFromDisk(
-    plugin: DataPlugin
-  ): Promise<PersistedSession[]> {
+  static async loadFromDisk(plugin: DataPlugin): Promise<PersistedSession[]> {
     const data = (await plugin.loadData()) || {};
     const raw: PersistedSession[] = data.persistedSessions || [];
     const cutoff = Date.now() - SESSION_MAX_AGE_MS;
-    const valid = raw.filter(s => new Date(s.savedAt).getTime() > cutoff);
+    const valid = raw.filter((s) => new Date(s.savedAt).getTime() > cutoff);
     if (valid.length !== raw.length) {
-      console.log(
-        "[work-terminal] Pruned",
-        raw.length - valid.length,
-        "stale persisted sessions"
-      );
+      console.log("[work-terminal] Pruned", raw.length - valid.length, "stale persisted sessions");
     }
     return valid;
   }
@@ -86,9 +80,7 @@ export class SessionPersistence {
   /**
    * Clear persisted sessions from disk (e.g. after all have been resumed or are stale).
    */
-  static async clearPersistedFromDisk(
-    plugin: DataPlugin
-  ): Promise<void> {
+  static async clearPersistedFromDisk(plugin: DataPlugin): Promise<void> {
     const data = (await plugin.loadData()) || {};
     delete data.persistedSessions;
     await plugin.saveData(data);
@@ -100,12 +92,17 @@ export class SessionPersistence {
    */
   static startPeriodicPersist(
     persistFn: () => Promise<void>,
-    intervalMs: number = 30_000
+    intervalMs: number = 30_000,
   ): () => void {
+    let isPersisting = false;
     const id = setInterval(() => {
-      persistFn().catch((err) =>
-        console.error("[work-terminal] Periodic persist failed:", err)
-      );
+      if (isPersisting) return;
+      isPersisting = true;
+      persistFn()
+        .catch((err) => console.error("[work-terminal] Periodic persist failed:", err))
+        .finally(() => {
+          isPersisting = false;
+        });
     }, intervalMs);
     return () => clearInterval(id);
   }
