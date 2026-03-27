@@ -574,7 +574,10 @@ export class ListPanel {
     this.claudeStates.set(itemId, state);
     if (state === "idle") {
       if (!this.idleSinceMap.has(itemId)) {
-        this.idleSinceMap.set(itemId, Date.now());
+        // Use TabManager's pre-seeded timestamp (300s ago for recovered sessions)
+        // so idle animations don't reset to full duration on reload.
+        const seeded = this.terminalPanel.getIdleSince(itemId);
+        this.idleSinceMap.set(itemId, seeded ?? Date.now());
       }
     } else {
       this.idleSinceMap.delete(itemId);
@@ -605,7 +608,10 @@ export class ListPanel {
       cardEl.querySelectorAll(".wt-session-badge").forEach((el) => el.remove());
       cardEl.querySelectorAll(".wt-resume-badge").forEach((el) => el.remove());
       const actionsEl = cardEl.querySelector(".wt-card-actions") as HTMLElement || cardEl;
+      // Insert badges before move-to-top button so order is: badges | move-to-top
+      const moveBtn = actionsEl.querySelector(".wt-move-to-top");
       this.renderSessionBadges(actionsEl, item);
+      if (moveBtn) actionsEl.appendChild(moveBtn); // re-append to keep it last
       this.renderResumeBadge(cardEl, item);
     }
   }

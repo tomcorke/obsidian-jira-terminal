@@ -166,7 +166,7 @@
   right: 0;
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
 }
 
 /* Card title */
@@ -270,11 +270,21 @@
   z-index: -1;
 }
 
-/* Waiting: amber gradient glow from right, pulsing */
+/* Waiting: amber gradient glow from right, smooth pulse via pseudo-element opacity */
 .wt-card-wrapper.wt-claude-waiting,
 .wt-card-wrapper.wt-claude-waiting:hover {
   border-left-color: rgba(214, 158, 46, 0.8);
+  position: relative;
+}
+
+.wt-card-wrapper.wt-claude-waiting::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(to left, rgba(214, 158, 46, 0.4) 0%, rgba(214, 158, 46, 0.12) 50%, transparent 100%);
   animation: wt-waiting-card-glow 2.5s ease-in-out infinite;
+  pointer-events: none;
 }
 
 /* Idle: depleting arc + desaturation over 300s.
@@ -306,12 +316,8 @@
 }
 
 @keyframes wt-waiting-card-glow {
-  0%, 100% {
-    background: linear-gradient(to left, rgba(214, 158, 46, 0.2) 0%, rgba(214, 158, 46, 0.06) 50%, transparent 100%);
-  }
-  50% {
-    background: linear-gradient(to left, rgba(214, 158, 46, 0.45) 0%, rgba(214, 158, 46, 0.15) 50%, transparent 100%);
-  }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
 /* Idle badge desaturation: full colour -> grey over 300s */
@@ -489,20 +495,25 @@
 
 /* Tab Claude state classes */
 .wt-tab-claude-waiting {
-  background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.35));
+  position: relative;
+}
+
+.wt-tab-claude-waiting::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.4));
   animation: wt-tab-waiting-pulse 2s ease-in-out infinite;
+  pointer-events: none;
 }
 
 @keyframes wt-tab-waiting-pulse {
-  0%, 100% { background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.2)); }
-  50% { background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.45)); }
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
 }
 
-.wt-tab-claude-active .wt-tab-label::before {
-  content: "\25cf";
-  color: #38a169;
-  margin-right: 4px;
-}
+/* Active tab: no indicator (green dot removed) */
 
 .wt-tab-claude-idle .wt-tab-label {
   color: var(--text-muted);
