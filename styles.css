@@ -190,41 +190,59 @@
    Claude state indicators on cards
    ============================================================================= */
 
+/* Active: green arc spinner AROUND the badge (not spinning the text).
+   Uses a pseudo-element with a conic-gradient that rotates. */
 .wt-claude-active .wt-session-badge {
-  animation: wt-badge-spin 1.5s ease-in-out infinite;
-}
-
-.wt-claude-waiting {
   position: relative;
 }
 
-.wt-claude-waiting::after {
+.wt-claude-active .wt-session-badge::before {
   content: "";
   position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: #d69e2e;
-  border-radius: 0 4px 4px 0;
+  inset: -3px;
+  border-radius: 12px;
+  background: conic-gradient(#38a169 0deg, #38a169 90deg, transparent 90deg, transparent 360deg);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  animation: wt-arc-spin 1.2s linear infinite;
+  z-index: -1;
+}
+
+/* Waiting: amber pulsing glow on the badge */
+.wt-claude-waiting .wt-session-badge {
+  box-shadow: 0 0 6px 2px rgba(214, 158, 46, 0.6);
   animation: wt-waiting-glow 2s ease-in-out infinite;
 }
 
+/* Idle: depleting arc + desaturation over 300s.
+   Uses @property for animatable conic-gradient angle. */
 .wt-claude-idle .wt-session-badge {
-  animation:
-    wt-badge-desaturate 300s linear forwards,
-    wt-badge-deplete 300s linear forwards;
-  animation-delay: var(--idle-offset, 0s), var(--idle-offset, 0s);
+  position: relative;
+  animation: wt-badge-desaturate 300s linear forwards;
+  animation-delay: var(--idle-offset, 0s);
 }
 
-@keyframes wt-badge-spin {
+.wt-claude-idle .wt-session-badge::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 12px;
+  background: conic-gradient(var(--text-muted) 0deg, var(--text-muted) var(--wt-idle-arc), transparent var(--wt-idle-arc), transparent 360deg);
+  mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+  animation: wt-badge-deplete 300s linear forwards;
+  animation-delay: var(--idle-offset, 0s);
+  z-index: -1;
+}
+
+@keyframes wt-arc-spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
 
 @keyframes wt-waiting-glow {
-  0%, 100% { opacity: 0.3; }
-  50% { opacity: 1; }
+  0%, 100% { box-shadow: 0 0 4px 1px rgba(214, 158, 46, 0.3); }
+  50% { box-shadow: 0 0 8px 3px rgba(214, 158, 46, 0.8); }
 }
 
 /* Idle badge desaturation: full colour -> grey over 300s */
