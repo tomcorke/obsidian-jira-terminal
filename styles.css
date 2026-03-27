@@ -268,12 +268,12 @@
   z-index: -1;
 }
 
-/* Waiting: amber gradient glow across the whole card */
+/* Waiting: amber gradient glow from right, pulsing */
 .wt-claude-waiting {
   background: linear-gradient(
-    135deg,
-    rgba(214, 158, 46, 0.25) 0%,
-    rgba(214, 158, 46, 0.08) 60%,
+    to left,
+    rgba(214, 158, 46, 0.3) 0%,
+    rgba(214, 158, 46, 0.1) 50%,
     transparent 100%
   ) !important;
   border-left-color: rgba(214, 158, 46, 0.8) !important;
@@ -308,10 +308,10 @@
 
 @keyframes wt-waiting-card-glow {
   0%, 100% {
-    background: linear-gradient(135deg, rgba(214, 158, 46, 0.15) 0%, rgba(214, 158, 46, 0.05) 60%, transparent 100%);
+    background: linear-gradient(to left, rgba(214, 158, 46, 0.15) 0%, rgba(214, 158, 46, 0.04) 50%, transparent 100%);
   }
   50% {
-    background: linear-gradient(135deg, rgba(214, 158, 46, 0.35) 0%, rgba(214, 158, 46, 0.12) 60%, transparent 100%);
+    background: linear-gradient(to left, rgba(214, 158, 46, 0.4) 0%, rgba(214, 158, 46, 0.12) 50%, transparent 100%);
   }
 }
 
