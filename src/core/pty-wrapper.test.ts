@@ -1,8 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { spawn } from 'child_process';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
 
-const PTY_WRAPPER = path.resolve(__dirname, '../../pty-wrapper.py');
+const PTY_WRAPPER = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '../../pty-wrapper.py'
+);
 
 /**
  * Spawn pty-wrapper.py with a short-lived command and immediately close stdin.
@@ -12,7 +16,7 @@ function spawnAndCloseStdin(
   args: string[],
   timeoutMs: number
 ): Promise<{ exitCode: number | null; timedOut: boolean }> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const proc = spawn('python3', [PTY_WRAPPER, ...args], {
       stdio: ['pipe', 'pipe', 'pipe'],
     });
@@ -22,6 +26,11 @@ function spawnAndCloseStdin(
       timedOut = true;
       proc.kill('SIGKILL');
     }, timeoutMs);
+
+    proc.on('error', (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
 
     proc.on('close', (code) => {
       clearTimeout(timer);
@@ -48,7 +57,7 @@ describe('pty-wrapper.py', () => {
   }, 10000);
 
   it('should exit with child exit code when child terminates', async () => {
-    // Spawn a command that exits immediately on its own.
+    // Spawn `true` which exits with code 0.
     // The wrapper should detect child exit and clean up.
     const result = await spawnAndCloseStdin(
       ['80', '24', '--', 'true'],
@@ -56,6 +65,6 @@ describe('pty-wrapper.py', () => {
     );
 
     expect(result.timedOut).toBe(false);
-    expect(result.exitCode).not.toBeNull();
+    expect(result.exitCode).toBe(0);
   }, 10000);
 });
