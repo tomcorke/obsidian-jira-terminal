@@ -288,7 +288,7 @@ export class TerminalPanelView {
 
         // Section header (disabled item acts as label)
         menu.addItem((item) => {
-          item.setTitle(col.label).setDisabled(true);
+          item.setTitle(`Move to ${col.label}`).setDisabled(true);
         });
         for (const workItem of inColumn) {
           menu.addItem((item) => {

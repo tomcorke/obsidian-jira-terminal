@@ -401,6 +401,7 @@
   flex: 1;
   overflow: hidden;
   gap: 1px;
+  padding-left: 6px;
 }
 
 .wt-tab-buttons {
