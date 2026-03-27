@@ -46,6 +46,7 @@ export class TerminalPanelView {
 
   // DOM elements
   private panelEl: HTMLElement;
+  private titleEl: HTMLElement;
   private tabBarEl: HTMLElement;
   private terminalWrapperEl: HTMLElement;
 
@@ -76,6 +77,10 @@ export class TerminalPanelView {
     this.promptBuilder = promptBuilder;
     this.onClaudeStateChange = onClaudeStateChange;
     this.onSessionChange = onSessionChange;
+
+    // Task title heading above tab bar
+    this.titleEl = panelEl.createDiv({ cls: "wt-task-title" });
+    panelEl.insertBefore(this.titleEl, terminalWrapperEl);
 
     // Tab bar at top of panel
     this.tabBarEl = panelEl.createDiv({ cls: "wt-tab-bar" });
@@ -560,6 +565,16 @@ export class TerminalPanelView {
   setActiveItem(itemId: string | null): void {
     this.tabManager.setActiveItem(itemId);
     this.renderTabBar();
+  }
+
+  setTitle(title: string | null): void {
+    if (title) {
+      this.titleEl.textContent = title;
+      this.titleEl.style.display = "";
+    } else {
+      this.titleEl.textContent = "";
+      this.titleEl.style.display = "none";
+    }
   }
 
   getRecoveredItemId(): string | null {
