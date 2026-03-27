@@ -9,6 +9,7 @@ import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
 import { SearchAddon } from "@xterm/addon-search";
 import { WebglAddon } from "@xterm/addon-webgl";
+import { Unicode11Addon } from "@xterm/addon-unicode11";
 import type { ChildProcess } from "child_process";
 import { StringDecoder } from "string_decoder";
 import { expandTilde, stripAnsi, electronRequire } from "../utils";
@@ -124,6 +125,11 @@ export class TerminalTab {
     this.terminal.loadAddon(new WebLinksAddon((_, uri) => {
       electronShell.openExternal(uri);
     }));
+
+    // Unicode 11 - correct emoji/CJK character widths
+    const unicode11 = new Unicode11Addon();
+    this.terminal.loadAddon(unicode11);
+    this.terminal.unicode.activeVersion = "11";
 
     this.terminal.open(this.containerEl);
 
