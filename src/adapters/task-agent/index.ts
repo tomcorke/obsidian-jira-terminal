@@ -20,8 +20,7 @@ import type { KanbanColumn } from "./types";
 export class TaskAgentAdapter extends BaseAdapter {
   config: PluginConfig = TASK_AGENT_CONFIG;
 
-  // Cached from framework calls - the framework always passes app to factory methods,
-  // and settings are passed via onItemCreated's settings parameter
+  // Cached from framework calls - the framework passes app and settings to factory methods
   private _app: App | null = null;
   private detailView: TaskDetailView | null = null;
 

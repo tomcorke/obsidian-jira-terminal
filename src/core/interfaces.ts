@@ -156,9 +156,9 @@ export interface AdapterBundle {
    */
   onLoad?(app: App, settings: Record<string, unknown>): Promise<void>;
   /** Create a parser for loading/parsing work items from the vault. */
-  createParser(app: App, basePath: string, settings: Record<string, unknown>): WorkItemParser;
+  createParser(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemParser;
   /** Create a mover for state transitions between columns. */
-  createMover(app: App, basePath: string, settings: Record<string, unknown>): WorkItemMover;
+  createMover(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemMover;
   /** Create a card renderer for the list panel. */
   createCardRenderer(): CardRenderer;
   /** Create a prompt builder for Claude context sessions. */
@@ -198,12 +198,12 @@ export interface AdapterBundle {
  */
 export abstract class BaseAdapter implements AdapterBundle {
   abstract config: PluginConfig;
-  abstract createParser(app: App, basePath: string, settings: Record<string, unknown>): WorkItemParser;
-  abstract createMover(app: App, basePath: string, settings: Record<string, unknown>): WorkItemMover;
+  abstract createParser(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemParser;
+  abstract createMover(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemMover;
   abstract createCardRenderer(): CardRenderer;
   abstract createPromptBuilder(): WorkItemPromptBuilder;
 
-  async onLoad?(_app: App, _settings: Record<string, unknown>): Promise<void> {
+  async onLoad(_app: App, _settings: Record<string, unknown>): Promise<void> {
     // no-op by default
   }
 
