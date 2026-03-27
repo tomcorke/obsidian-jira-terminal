@@ -269,14 +269,9 @@
 }
 
 /* Waiting: amber gradient glow from right, pulsing */
-.wt-claude-waiting {
-  background: linear-gradient(
-    to left,
-    rgba(214, 158, 46, 0.3) 0%,
-    rgba(214, 158, 46, 0.1) 50%,
-    transparent 100%
-  ) !important;
-  border-left-color: rgba(214, 158, 46, 0.8) !important;
+.wt-card-wrapper.wt-claude-waiting,
+.wt-card-wrapper.wt-claude-waiting:hover {
+  border-left-color: rgba(214, 158, 46, 0.8);
   animation: wt-waiting-card-glow 2.5s ease-in-out infinite;
 }
 
@@ -308,10 +303,10 @@
 
 @keyframes wt-waiting-card-glow {
   0%, 100% {
-    background: linear-gradient(to left, rgba(214, 158, 46, 0.15) 0%, rgba(214, 158, 46, 0.04) 50%, transparent 100%);
+    background: linear-gradient(to left, rgba(214, 158, 46, 0.1) 0%, rgba(214, 158, 46, 0.04) 50%, transparent 100%);
   }
   50% {
-    background: linear-gradient(to left, rgba(214, 158, 46, 0.4) 0%, rgba(214, 158, 46, 0.12) 50%, transparent 100%);
+    background: linear-gradient(to left, rgba(214, 158, 46, 0.7) 0%, rgba(214, 158, 46, 0.12) 50%, transparent 100%);
   }
 }
 
