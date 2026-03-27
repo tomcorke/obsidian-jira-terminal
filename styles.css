@@ -1,0 +1,597 @@
+/* =============================================================================
+   Work Terminal - Framework CSS
+   All classes prefixed with wt- to avoid conflicts with other plugins.
+   ============================================================================= */
+
+/* =============================================================================
+   Layout: 3-column split
+   ============================================================================= */
+
+.wt-main-view {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+}
+
+.wt-left-panel {
+  width: 280px;
+  min-width: 200px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-right: 1px solid var(--background-modifier-border);
+}
+
+.wt-centre-panel {
+  flex: 1;
+  min-width: 300px;
+  overflow: hidden;
+  border-right: 1px solid var(--background-modifier-border);
+  position: relative;
+}
+
+.wt-right-panel {
+  flex: 1;
+  min-width: 300px;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.wt-divider {
+  width: 5px;
+  cursor: col-resize;
+  flex-shrink: 0;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.wt-divider:hover,
+.wt-divider-active {
+  background: var(--interactive-accent);
+  opacity: 0.3;
+}
+
+/* =============================================================================
+   Filter input
+   ============================================================================= */
+
+.wt-filter-container {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.wt-filter-input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wt-filter-input:focus {
+  border-color: var(--interactive-accent);
+}
+
+/* =============================================================================
+   List panel & sections
+   ============================================================================= */
+
+.wt-list-panel {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.wt-section {
+  margin-bottom: 2px;
+}
+
+.wt-section-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+  border-left: 3px solid transparent;
+}
+
+.wt-section-header:hover {
+  background: var(--background-modifier-hover);
+}
+
+/* Section header colours per state */
+.wt-section-header-priority { border-left-color: #e53e3e; }
+.wt-section-header-active { border-left-color: var(--interactive-accent); }
+.wt-section-header-todo { border-left-color: var(--text-muted); }
+.wt-section-header-done { border-left-color: #38a169; }
+
+.wt-collapse-icon {
+  font-size: 8px;
+  width: 10px;
+  text-align: center;
+}
+
+.wt-section-cards {
+  padding: 0 4px 4px;
+}
+
+/* =============================================================================
+   Cards
+   ============================================================================= */
+
+.wt-card-wrapper {
+  position: relative;
+  padding: 6px 10px;
+  margin: 2px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.1s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wt-card-wrapper:hover {
+  background: var(--background-modifier-hover);
+}
+
+.wt-card-selected {
+  background: var(--background-modifier-active-hover) !important;
+  border-left: 3px solid var(--interactive-accent);
+  padding-left: 7px;
+}
+
+.wt-card-dragging {
+  opacity: 0.4;
+}
+
+/* =============================================================================
+   Drop indicator
+   ============================================================================= */
+
+.wt-drop-indicator {
+  height: 2px;
+  background: var(--interactive-accent);
+  border-radius: 1px;
+  margin: 1px 4px;
+}
+
+/* =============================================================================
+   Session badges
+   ============================================================================= */
+
+.wt-session-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  font-size: 10px;
+  font-weight: 600;
+  color: white;
+  flex-shrink: 0;
+}
+
+.wt-badge-claude { background: #C15F3C; }
+.wt-badge-shell { background: #3b82f6; }
+.wt-badge-mixed { background: #8b5cf6; }
+
+/* =============================================================================
+   Claude state indicators on cards
+   ============================================================================= */
+
+.wt-claude-active .wt-session-badge {
+  animation: wt-badge-spin 1.5s ease-in-out infinite;
+}
+
+.wt-claude-waiting {
+  position: relative;
+}
+
+.wt-claude-waiting::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: #d69e2e;
+  border-radius: 0 4px 4px 0;
+  animation: wt-waiting-glow 2s ease-in-out infinite;
+}
+
+.wt-claude-idle .wt-session-badge {
+  animation:
+    wt-badge-desaturate 300s linear forwards,
+    wt-badge-deplete 300s linear forwards;
+  animation-delay: var(--idle-offset, 0s), var(--idle-offset, 0s);
+}
+
+@keyframes wt-badge-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes wt-waiting-glow {
+  0%, 100% { opacity: 0.3; }
+  50% { opacity: 1; }
+}
+
+/* Idle badge desaturation: full colour -> grey over 300s */
+@keyframes wt-badge-desaturate {
+  0% { filter: saturate(1); }
+  100% { filter: saturate(0.1); }
+}
+
+/* Idle badge depletion arc: uses custom property for conic-gradient */
+@property --wt-idle-arc {
+  syntax: "<angle>";
+  initial-value: 360deg;
+  inherits: false;
+}
+
+@keyframes wt-badge-deplete {
+  0% { --wt-idle-arc: 360deg; }
+  100% { --wt-idle-arc: 0deg; }
+}
+
+/* =============================================================================
+   Move-to-top button
+   ============================================================================= */
+
+.wt-move-to-top {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  font-size: 12px;
+  color: var(--interactive-accent);
+  cursor: pointer;
+  background: var(--background-primary);
+}
+
+.wt-card-wrapper:hover .wt-move-to-top {
+  display: flex;
+}
+
+.wt-move-to-top:hover {
+  background: var(--interactive-accent);
+  color: white;
+}
+
+/* =============================================================================
+   Resume badge
+   ============================================================================= */
+
+.wt-resume-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+/* =============================================================================
+   Placeholder cards (enrichment)
+   ============================================================================= */
+
+.wt-card-placeholder {
+  padding: 6px 10px;
+  margin: 2px 0;
+  border-radius: 4px;
+  font-size: 12px;
+  color: var(--text-muted);
+  background: linear-gradient(90deg,
+    var(--background-secondary) 0%,
+    var(--background-modifier-hover) 50%,
+    var(--background-secondary) 100%
+  );
+  background-size: 200% 100%;
+  animation: wt-card-shine 2s ease-in-out infinite;
+}
+
+.wt-card-placeholder-success {
+  animation: none;
+  background: var(--background-modifier-success);
+  color: var(--text-on-accent);
+}
+
+@keyframes wt-card-shine {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* =============================================================================
+   Tab bar
+   ============================================================================= */
+
+.wt-tab-bar {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--background-modifier-border);
+  min-height: 34px;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.wt-tabs-container {
+  display: flex;
+  flex-wrap: wrap;
+  flex: 1;
+  overflow: hidden;
+  gap: 1px;
+}
+
+.wt-tab-buttons {
+  display: flex;
+  gap: 2px;
+  padding: 2px 4px;
+  flex-shrink: 0;
+}
+
+.wt-tab {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  max-width: 200px;
+  font-size: 12px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.wt-tab:hover {
+  background: var(--background-modifier-hover);
+}
+
+.wt-tab-active {
+  border-bottom-color: var(--interactive-accent);
+  font-weight: 600;
+}
+
+.wt-tab-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+}
+
+.wt-tab-close {
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.wt-tab-close:hover {
+  color: var(--text-normal);
+}
+
+.wt-tab-dragging {
+  opacity: 0.4;
+}
+
+.wt-tab-drop-target {
+  border-bottom-color: var(--interactive-accent) !important;
+}
+
+/* Tab Claude state classes */
+.wt-tab-claude-waiting {
+  background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.15));
+}
+
+.wt-tab-claude-active .wt-tab-label::before {
+  content: "\25cf ";
+  color: #38a169;
+}
+
+.wt-tab-claude-idle .wt-tab-label {
+  color: var(--text-muted);
+}
+
+/* Tab rename input */
+.wt-tab-rename-input {
+  font-size: 12px;
+  padding: 1px 4px;
+  border: 1px solid var(--interactive-accent);
+  border-radius: 2px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  width: 120px;
+  outline: none;
+}
+
+/* =============================================================================
+   Spawn buttons
+   ============================================================================= */
+
+.wt-spawn-btn {
+  padding: 2px 8px;
+  font-size: 11px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 3px;
+  background: var(--background-primary);
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wt-spawn-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+.wt-spawn-claude {
+  border-color: #C15F3C;
+  color: #C15F3C;
+}
+
+.wt-spawn-claude:hover {
+  background: rgba(193, 95, 60, 0.1);
+}
+
+.wt-spawn-claude-ctx {
+  border-color: #C15F3C;
+  color: #C15F3C;
+}
+
+.wt-spawn-claude-ctx:hover {
+  background: rgba(193, 95, 60, 0.1);
+}
+
+/* =============================================================================
+   Prompt box
+   ============================================================================= */
+
+.wt-prompt-box {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.wt-prompt-toggle {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px dashed var(--background-modifier-border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.wt-prompt-toggle:hover {
+  border-color: var(--interactive-accent);
+  color: var(--text-normal);
+}
+
+.wt-prompt-expanded {
+  margin-top: 6px;
+}
+
+.wt-prompt-input {
+  width: 100%;
+  padding: 4px 8px;
+  font-size: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+  resize: vertical;
+  min-height: 36px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.wt-prompt-input:focus {
+  border-color: var(--interactive-accent);
+}
+
+.wt-prompt-selector-row {
+  display: flex;
+  gap: 6px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.wt-prompt-column-select {
+  flex: 1;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 3px;
+  background: var(--background-primary);
+  color: var(--text-normal);
+}
+
+.wt-prompt-send {
+  padding: 3px 12px;
+  font-size: 12px;
+  border: 1px solid var(--interactive-accent);
+  border-radius: 3px;
+  background: var(--interactive-accent);
+  color: var(--text-on-accent);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.wt-prompt-send:hover {
+  opacity: 0.9;
+}
+
+/* =============================================================================
+   Terminal wrapper
+   ============================================================================= */
+
+.wt-terminal-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+
+.wt-terminal-instance {
+  width: 100% !important;
+  height: 100%;
+  overflow-y: hidden !important;
+}
+
+/* Hidden terminals: visibility hidden preserves render state,
+   z-index -1 prevents focus capture */
+.wt-terminal-instance.hidden {
+  visibility: hidden;
+  position: absolute;
+  z-index: -1;
+}
+
+/* xterm overflow fixes */
+.wt-terminal-instance .xterm {
+  width: 100% !important;
+  height: 100%;
+}
+
+.wt-terminal-instance .xterm-viewport {
+  overflow-y: auto !important;
+}
+
+/* =============================================================================
+   Danger confirm
+   ============================================================================= */
+
+.wt-danger-buttons {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 16px;
+}
