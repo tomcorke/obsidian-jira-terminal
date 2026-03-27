@@ -268,10 +268,16 @@
   z-index: -1;
 }
 
-/* Waiting: amber pulsing glow on the badge */
-.wt-claude-waiting .wt-session-badge {
-  box-shadow: 0 0 6px 2px rgba(214, 158, 46, 0.6);
-  animation: wt-waiting-glow 2s ease-in-out infinite;
+/* Waiting: amber gradient glow across the whole card */
+.wt-claude-waiting {
+  background: linear-gradient(
+    135deg,
+    rgba(214, 158, 46, 0.25) 0%,
+    rgba(214, 158, 46, 0.08) 60%,
+    transparent 100%
+  ) !important;
+  border-left-color: rgba(214, 158, 46, 0.8) !important;
+  animation: wt-waiting-card-glow 2.5s ease-in-out infinite;
 }
 
 /* Idle: depleting arc + desaturation over 300s.
@@ -300,9 +306,13 @@
   100% { transform: rotate(360deg); }
 }
 
-@keyframes wt-waiting-glow {
-  0%, 100% { box-shadow: 0 0 4px 1px rgba(214, 158, 46, 0.3); }
-  50% { box-shadow: 0 0 8px 3px rgba(214, 158, 46, 0.8); }
+@keyframes wt-waiting-card-glow {
+  0%, 100% {
+    background: linear-gradient(135deg, rgba(214, 158, 46, 0.15) 0%, rgba(214, 158, 46, 0.05) 60%, transparent 100%);
+  }
+  50% {
+    background: linear-gradient(135deg, rgba(214, 158, 46, 0.35) 0%, rgba(214, 158, 46, 0.12) 60%, transparent 100%);
+  }
 }
 
 /* Idle badge desaturation: full colour -> grey over 300s */
