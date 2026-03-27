@@ -576,7 +576,9 @@
   width: 100% !important;
   height: 100%;
   overflow: visible;
-  position: relative;
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .wt-scroll-bottom {
@@ -608,7 +610,7 @@
    z-index -1 prevents focus capture */
 .wt-terminal-instance.hidden {
   visibility: hidden;
-  position: absolute;
+  pointer-events: none;
   z-index: -1;
 }
 
