@@ -44,8 +44,8 @@ export class WorkTerminalSettingsTab extends PluginSettingTab {
     containerEl.createEl("h2", { text: "Core" });
 
     this.addCoreSetting(containerEl, "core.claudeCommand", "Claude command", "Path or name of the Claude CLI binary");
-    this.addCoreSetting(containerEl, "core.claudeExtraArgs", "Claude extra args", "Additional arguments passed to Claude CLI (space-separated)");
-    this.addCoreSetting(containerEl, "core.additionalAgentContext", "Additional agent context", "Extra context appended to Claude prompts");
+    this.addCoreTextArea(containerEl, "core.claudeExtraArgs", "Claude extra args", "Additional arguments passed to Claude CLI (space-separated)");
+    this.addCoreTextArea(containerEl, "core.additionalAgentContext", "Additional agent context", "Extra context appended to Claude prompts");
     this.addCoreSetting(containerEl, "core.defaultShell", "Default shell", "Shell used for new terminal tabs");
     this.addCoreSetting(containerEl, "core.defaultTerminalCwd", "Default terminal CWD", "Working directory for new terminals (supports ~)");
 
@@ -69,6 +69,26 @@ export class WorkTerminalSettingsTab extends PluginSettingTab {
       .setDesc(description)
       .addText((text) =>
         text
+          .setValue(String(value))
+          .onChange(async (newValue) => {
+            const d = (await this.plugin.loadData()) || {};
+            if (!d.settings) d.settings = {};
+            d.settings[key] = newValue;
+            await this.plugin.saveData(d);
+          })
+      );
+  }
+
+  private async addCoreTextArea(containerEl: HTMLElement, key: keyof CoreSettings, name: string, description: string): Promise<void> {
+    const data = (await this.plugin.loadData()) || {};
+    const settings = data.settings || {};
+    const value = settings[key] ?? CORE_DEFAULTS[key];
+
+    new Setting(containerEl)
+      .setName(name)
+      .setDesc(description)
+      .addTextArea((ta) =>
+        ta
           .setValue(String(value))
           .onChange(async (newValue) => {
             const d = (await this.plugin.loadData()) || {};
