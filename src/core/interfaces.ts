@@ -1,4 +1,4 @@
-import type { TFile, App, MenuItem } from "obsidian";
+import type { TFile, App, MenuItem, WorkspaceLeaf } from "obsidian";
 
 /** A work item that owns terminal tabs */
 export interface WorkItem {
@@ -73,7 +73,8 @@ export interface AdapterBundle {
   createMover(app: App, basePath: string): WorkItemMover;
   createCardRenderer(): CardRenderer;
   createPromptBuilder(): WorkItemPromptBuilder;
-  createDetailView?(item: WorkItem, containerEl: HTMLElement): void;
+  createDetailView?(item: WorkItem, app: App, ownerLeaf: WorkspaceLeaf): void;
+  detachDetailView?(): void;
   onItemCreated?(path: string, settings: Record<string, unknown>): Promise<void>;
   transformSessionLabel?(oldLabel: string, detectedLabel: string): string;
 }
@@ -85,8 +86,12 @@ export abstract class BaseAdapter implements AdapterBundle {
   abstract createCardRenderer(): CardRenderer;
   abstract createPromptBuilder(): WorkItemPromptBuilder;
 
-  createDetailView?(_item: WorkItem, _containerEl: HTMLElement): void {
+  createDetailView?(_item: WorkItem, _app: App, _ownerLeaf: WorkspaceLeaf): void {
     return undefined;
+  }
+
+  detachDetailView?(): void {
+    // no-op by default
   }
 
   async onItemCreated(_path: string, _settings: Record<string, unknown>): Promise<void> {

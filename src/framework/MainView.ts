@@ -1,9 +1,11 @@
 /**
- * MainView - ItemView with 3-column resizable split layout.
+ * MainView - ItemView with 2-panel resizable split layout.
  *
  * Left: ListPanel (work items)
- * Centre: Detail panel (adapter-provided or hidden for 2-column)
  * Right: TerminalPanelView (terminals)
+ *
+ * Detail panel (if adapter provides createDetailView) is an Obsidian workspace
+ * leaf created via createLeafBySplit - managed entirely by the adapter.
  *
  * Handles vault events (create/delete/rename) with debounced refresh and
  * delete-create rename detection for shell mv operations.
@@ -34,7 +36,6 @@ export class MainView extends ItemView {
 
   // Layout elements
   private leftPanelEl: HTMLElement | null = null;
-  private centrePanelEl: HTMLElement | null = null;
   private rightPanelEl: HTMLElement | null = null;
 
   // Vault event handling
@@ -44,9 +45,6 @@ export class MainView extends ItemView {
 
   // Resize observer for terminal refit on view switch
   private containerObserver: ResizeObserver | null = null;
-
-  // Has detail panel?
-  private hasDetailPanel = false;
 
   constructor(leaf: WorkspaceLeaf, adapter: AdapterBundle, plugin: Plugin & { isReloading: boolean }) {
     super(leaf);
@@ -70,9 +68,6 @@ export class MainView extends ItemView {
     const container = this.contentEl;
     container.empty();
     container.addClass("wt-main-view");
-
-    // Determine layout mode
-    this.hasDetailPanel = typeof this.adapter.createDetailView === "function";
 
     // Build layout
     this.buildLayout(container);
@@ -104,44 +99,26 @@ export class MainView extends ItemView {
     this.leftPanelEl = container.createDiv({ cls: "wt-left-panel" });
     this.leftPanelEl.style.cssText = "width: 280px; min-width: 200px; flex-shrink: 0; display: flex; flex-direction: column; overflow: hidden; border-right: 1px solid var(--background-modifier-border);";
 
-    if (this.hasDetailPanel) {
-      // 3-column layout: list | detail | terminal
-      const divider1 = this.createDivider(container, "left");
+    // Single divider
+    this.createDivider(container);
 
-      this.centrePanelEl = container.createDiv({ cls: "wt-centre-panel" });
-      this.centrePanelEl.style.cssText = "flex: 1; min-width: 300px; overflow: hidden; border-right: 1px solid var(--background-modifier-border); position: relative;";
-
-      const divider2 = this.createDivider(container, "right");
-
-      this.rightPanelEl = container.createDiv({ cls: "wt-right-panel" });
-      this.rightPanelEl.style.cssText = "flex: 1; min-width: 300px; overflow: hidden; position: relative; display: flex; flex-direction: column;";
-    } else {
-      // 2-column layout: list | terminal
-      const divider = this.createDivider(container, "left");
-
-      this.rightPanelEl = container.createDiv({ cls: "wt-right-panel" });
-      this.rightPanelEl.style.cssText = "flex: 1; min-width: 300px; overflow: hidden; position: relative; display: flex; flex-direction: column;";
-    }
+    // Right panel - terminals
+    this.rightPanelEl = container.createDiv({ cls: "wt-right-panel" });
+    this.rightPanelEl.style.cssText = "flex: 1; min-width: 300px; overflow: hidden; position: relative; display: flex; flex-direction: column;";
   }
 
-  private createDivider(container: HTMLElement, side: "left" | "right"): HTMLElement {
+  private createDivider(container: HTMLElement): HTMLElement {
     const divider = container.createDiv({ cls: "wt-divider" });
     divider.style.cssText = "width: 5px; cursor: col-resize; flex-shrink: 0; background: transparent;";
 
     let startX = 0;
     let startWidth = 0;
-    let targetEl: HTMLElement | null = null;
 
     const onMouseDown = (e: MouseEvent) => {
       e.preventDefault();
       startX = e.clientX;
-      if (side === "left") {
-        targetEl = this.leftPanelEl;
-      } else {
-        targetEl = this.centrePanelEl;
-      }
-      if (targetEl) {
-        startWidth = targetEl.offsetWidth;
+      if (this.leftPanelEl) {
+        startWidth = this.leftPanelEl.offsetWidth;
       }
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
@@ -149,16 +126,13 @@ export class MainView extends ItemView {
     };
 
     const onMouseMove = (e: MouseEvent) => {
-      if (!targetEl) return;
+      if (!this.leftPanelEl) return;
       const delta = e.clientX - startX;
-      const newWidth = Math.max(
-        side === "left" ? 200 : 300,
-        startWidth + delta
-      );
-      targetEl.style.width = newWidth + "px";
-      targetEl.style.flexBasis = newWidth + "px";
-      targetEl.style.flexGrow = "0";
-      targetEl.style.flexShrink = "0";
+      const newWidth = Math.max(200, startWidth + delta);
+      this.leftPanelEl.style.width = newWidth + "px";
+      this.leftPanelEl.style.flexBasis = newWidth + "px";
+      this.leftPanelEl.style.flexGrow = "0";
+      this.leftPanelEl.style.flexShrink = "0";
       // Trigger terminal refit
       this.terminalPanel?.refitActive();
     };
@@ -233,9 +207,8 @@ export class MainView extends ItemView {
       // onSelect callback
       (item: WorkItem | null) => {
         this.terminalPanel?.setActiveItem(item?.id ?? null);
-        if (item && this.hasDetailPanel && this.centrePanelEl) {
-          this.centrePanelEl.empty();
-          this.adapter.createDetailView?.(item, this.centrePanelEl);
+        if (item && typeof this.adapter.createDetailView === "function") {
+          this.adapter.createDetailView(item, this.app, this.leaf);
         }
       },
       // onCustomOrderChange callback
@@ -375,6 +348,9 @@ export class MainView extends ItemView {
   // ---------------------------------------------------------------------------
 
   async onClose(): Promise<void> {
+    // Detach adapter's detail leaf before any other cleanup
+    this.adapter.detachDetailView?.();
+
     // Clean up vault event refs
     for (const ref of this.vaultEventRefs) {
       this.app.vault.offref(ref);

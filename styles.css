@@ -4,7 +4,8 @@
    ============================================================================= */
 
 /* =============================================================================
-   Layout: 3-column split
+   Layout: 2-column split (list | terminals)
+   Detail panel is an Obsidian workspace leaf managed by the adapter.
    ============================================================================= */
 
 .wt-main-view {
@@ -21,14 +22,6 @@
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--background-modifier-border);
-}
-
-.wt-centre-panel {
-  flex: 1;
-  min-width: 300px;
-  overflow: hidden;
-  border-right: 1px solid var(--background-modifier-border);
-  position: relative;
 }
 
 .wt-right-panel {
