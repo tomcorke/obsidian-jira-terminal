@@ -28,6 +28,9 @@ interface PersistableTab {
 /** 7 days in milliseconds */
 const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
+/** Default interval for periodic disk persist (30 seconds) */
+export const PERSIST_INTERVAL_MS = 30_000;
+
 export class SessionPersistence {
   /**
    * Save Claude session metadata to disk via Obsidian's plugin data API.
@@ -89,5 +92,21 @@ export class SessionPersistence {
     const data = (await plugin.loadData()) || {};
     delete data.persistedSessions;
     await plugin.saveData(data);
+  }
+
+  /**
+   * Start a periodic persist interval as a safety net. Returns a stop function.
+   * If the async persist callback fails, errors are logged but don't break the interval.
+   */
+  static startPeriodicPersist(
+    persistFn: () => Promise<void>,
+    intervalMs: number = 30_000
+  ): () => void {
+    const id = setInterval(() => {
+      persistFn().catch((err) =>
+        console.error("[work-terminal] Periodic persist failed:", err)
+      );
+    }, intervalMs);
+    return () => clearInterval(id);
   }
 }
