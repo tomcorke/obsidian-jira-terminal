@@ -135,7 +135,7 @@ def main():
                     try:
                         data = os.read(0, 4096)
                         if not data:
-                            pass
+                            break  # stdin EOF - parent closed pipe
                         else:
                             process_stdin(data, master_fd)
                     except OSError:
