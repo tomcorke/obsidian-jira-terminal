@@ -8,7 +8,7 @@ const expr = process.argv[2] || "app.commands.executeCommandById('work-terminal:
 
 function cdpEval(expression) {
   return new Promise((resolve, reject) => {
-    http.get('http://localhost:9222/json', (res) => {
+    http.get('http://localhost:8315/json', (res) => {
       let data = '';
       res.on('data', (chunk) => { data += chunk; });
       res.on('end', () => {
