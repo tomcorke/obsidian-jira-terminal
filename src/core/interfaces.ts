@@ -93,8 +93,8 @@ export interface WorkItemParser {
  * file renames, and activity log entries.
  */
 export interface WorkItemMover {
-  /** Move an item file to the target column, updating state/tags/timestamps. */
-  move(file: TFile, targetColumnId: string): Promise<void>;
+  /** Move an item file to the target column, updating state/tags/timestamps. Returns true on success, false on failure. */
+  move(file: TFile, targetColumnId: string): Promise<boolean>;
 }
 
 /**
