@@ -368,15 +368,20 @@ export class ListPanel {
       } else {
         // Cross-section move
         const item = this.items.find((i) => i.id === this.dragSourceId);
-        if (item) {
+        const dragId = this.dragSourceId;
+        if (item && dragId) {
           await this.moveToColumn(item, columnId);
-          // After move, insert at drop position
+          // After file move + metadata cache update, set drop position.
+          // Build full order from current items + the moved item at drop index.
           setTimeout(() => {
-            const order = this.customOrder[columnId] || [];
-            const filtered = order.filter((id) => id !== this.dragSourceId);
-            filtered.splice(dropIndex, 0, this.dragSourceId!);
+            const colItems = this.sortItems(this.groups[columnId] || [], columnId);
+            const order = colItems.map((i) => i.id);
+            // Item may already be in the list from metadata cache update
+            const filtered = order.filter((id) => id !== dragId);
+            filtered.splice(dropIndex, 0, dragId);
             this.customOrder[columnId] = filtered;
             this.onCustomOrderChange(this.customOrder);
+            this.render(this.groups, this.customOrder);
           }, 200);
         }
       }
