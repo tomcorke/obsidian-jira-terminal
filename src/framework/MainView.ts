@@ -18,6 +18,7 @@ import { ListPanel } from "./ListPanel";
 import { TerminalPanelView } from "./TerminalPanelView";
 import { PromptBox } from "./PromptBox";
 import { loadAllSettings } from "./SettingsTab";
+import { SessionStore } from "../core/session/SessionStore";
 
 interface PendingRename {
   uuid: string | null;
@@ -88,6 +89,12 @@ export class MainView extends ItemView {
 
     // Initial data load
     await this.refreshList();
+
+    // Recover selection from hot-reload AFTER list is populated
+    const recoveredId = this.terminalPanel?.getRecoveredItemId();
+    if (recoveredId) {
+      this.listPanel?.selectById(recoveredId);
+    }
   }
 
   private buildLayout(container: HTMLElement): void {
@@ -219,11 +226,6 @@ export class MainView extends ItemView {
       }
     );
 
-    // Recover from hot-reload
-    const recoveredId = this.terminalPanel.getRecoveredItemId();
-    if (recoveredId) {
-      this.listPanel.selectById(recoveredId);
-    }
   }
 
   // ---------------------------------------------------------------------------
@@ -348,7 +350,20 @@ export class MainView extends ItemView {
   // ---------------------------------------------------------------------------
 
   async onClose(): Promise<void> {
-    // Detach adapter's detail leaf before any other cleanup
+    // Stash/dispose terminals FIRST before any other cleanup, because
+    // subsequent cleanup (detaching detail view, unregistering events)
+    // can trigger selection changes that reset activeItemId to null.
+    // Skip stash if already stashed by hotReload() (sessions would be empty).
+    if (this.pluginRef.isReloading) {
+      // Only stash if not already stashed (hotReload pre-stashes explicitly)
+      if (!SessionStore.isReload()) {
+        this.terminalPanel?.stashAll();
+      }
+    } else {
+      this.terminalPanel?.disposeAll();
+    }
+
+    // Detach adapter's detail leaf
     this.adapter.detachDetailView?.();
 
     // Clean up vault event refs
@@ -369,14 +384,6 @@ export class MainView extends ItemView {
     // Clean up debounce timer
     if (this.refreshDebounceTimer) {
       clearTimeout(this.refreshDebounceTimer);
-    }
-
-    if (this.pluginRef.isReloading) {
-      // Stash terminal sessions for hot-reload recovery
-      this.terminalPanel?.stashAll();
-    } else {
-      // Full close - dispose terminals
-      this.terminalPanel?.disposeAll();
     }
   }
 }

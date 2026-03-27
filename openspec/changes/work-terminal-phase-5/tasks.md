@@ -35,7 +35,7 @@
 
 ## 5. Session Persistence Integration Testing
 
-- [ ] 5.1 Test window-global stash: hot-reload plugin, verify terminals survive
+- [x] 5.1 Test window-global stash: hot-reload plugin, verify terminals survive
 - [ ] 5.2 Test disk persistence: spawn Claude session, verify data.json entry with version: 1
 - [ ] 5.3 Test session resume: reload Obsidian (not hot-reload), verify `--resume` with UUID
 - [ ] 5.4 Test 7-day retention pruning of old sessions
@@ -70,5 +70,6 @@
 - [x] 9.1 Fix integration bugs discovered during testing:
   - [x] 9.1a Fix detail panel creating duplicate leaves (TaskDetailView survival check used getLeavesOfType("markdown") but freshly-split leaf starts as "empty" type; changed to parent-based check + re-entrancy guard)
   - [x] 9.1b Fix Claude spawn not including binary in commandArgs (buildClaudeArgs returned only flags like --session-id, pty-wrapper received args without the claude command; prepended resolved command path to args array in spawnClaude, spawnClaudeWithContext, and resumeSession)
-- [ ] 9.2 Re-run failed test cases after fixes to verify resolution
+  - [x] 9.1c Fix hot-reload not recovering sessions: (1) hotReload now explicitly stashes before disable, (2) onClose skips re-stash if store already exists, (3) activateView called after enablePlugin to trigger onOpen on new instance, (4) recovery selection moved after refreshList so cards exist
+- [x] 9.2 Re-run failed test cases after fixes to verify resolution
 - [ ] 9.3 Final pass: run through complete regression test document, mark all statuses

@@ -55,12 +55,26 @@ export abstract class PluginBase extends Plugin {
     this._isReloading = true;
     console.log("[work-terminal] Hot reload...");
 
-    // MainView.prepareReload() is called by onClose when _isReloading is true
-    // The view checks the plugin's isReloading flag via the reference we pass
+    // Explicitly stash terminal sessions BEFORE disabling, because
+    // disablePlugin's cleanup sequence may trigger selection changes
+    // that reset activeItemId before onClose can stash.
+    const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+    if (leaf) {
+      const view = leaf.view as any;
+      view?.terminalPanel?.stashAll();
+    }
 
-    const plugins = (this.app as any).plugins;
+    const appRef = this.app;
+    const plugins = (appRef as any).plugins;
     await plugins.disablePlugin("work-terminal");
     await plugins.enablePlugin("work-terminal");
+
+    // The new plugin instance re-registered the view type. Open the view
+    // so onOpen() fires and picks up stashed sessions from window store.
+    const newPlugin = plugins.plugins["work-terminal"];
+    if (newPlugin && typeof newPlugin.activateView === "function") {
+      await newPlugin.activateView();
+    }
     console.log("[work-terminal] Hot reload complete");
   }
 
