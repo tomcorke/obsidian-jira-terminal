@@ -402,7 +402,7 @@ export class TerminalTab {
     // Check for waiting patterns first (highest priority).
     // Suppress waiting if the tab is currently visible - the user can already see it.
     if (this._looksLikeWaiting(screenLines)) {
-      this._setClaudeState(this.isVisible ? "idle" : "waiting");
+      this._setClaudeState("waiting");
       return;
     }
 
