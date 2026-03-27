@@ -347,6 +347,7 @@ export class MainView extends ItemView {
     const data = (await this.pluginRef.loadData()) || {};
     const customOrder = data.customOrder || {};
     this.listPanel.render(groups, customOrder);
+    this.terminalPanel?.setItems(items);
   }
 
   // ---------------------------------------------------------------------------
