@@ -149,10 +149,16 @@ export interface WorkItemPromptBuilder {
 export interface AdapterBundle {
   /** Plugin configuration (columns, settings, item name). */
   config: PluginConfig;
+  /**
+   * Optional async initialization hook called once during view setup,
+   * before createParser/createMover. Use for async setup like credential
+   * fetching, API client initialization, or initial data sync.
+   */
+  onLoad?(app: App, settings: Record<string, unknown>): Promise<void>;
   /** Create a parser for loading/parsing work items from the vault. */
-  createParser(app: App, basePath: string): WorkItemParser;
+  createParser(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemParser;
   /** Create a mover for state transitions between columns. */
-  createMover(app: App, basePath: string): WorkItemMover;
+  createMover(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemMover;
   /** Create a card renderer for the list panel. */
   createCardRenderer(): CardRenderer;
   /** Create a prompt builder for Claude context sessions. */
@@ -192,10 +198,14 @@ export interface AdapterBundle {
  */
 export abstract class BaseAdapter implements AdapterBundle {
   abstract config: PluginConfig;
-  abstract createParser(app: App, basePath: string): WorkItemParser;
-  abstract createMover(app: App, basePath: string): WorkItemMover;
+  abstract createParser(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemParser;
+  abstract createMover(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemMover;
   abstract createCardRenderer(): CardRenderer;
   abstract createPromptBuilder(): WorkItemPromptBuilder;
+
+  async onLoad(_app: App, _settings: Record<string, unknown>): Promise<void> {
+    // no-op by default
+  }
 
   createDetailView?(_item: WorkItem, _app: App, _ownerLeaf: WorkspaceLeaf): void {
     return undefined;

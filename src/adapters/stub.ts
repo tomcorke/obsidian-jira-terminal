@@ -86,11 +86,11 @@ export class StubAdapter extends BaseAdapter {
     itemName: "item",
   };
 
-  createParser(app: App, basePath: string): WorkItemParser {
+  createParser(app: App, basePath: string, _settings?: Record<string, unknown>): WorkItemParser {
     return new StubParser(app, basePath);
   }
 
-  createMover(_app: App, _basePath: string): WorkItemMover {
+  createMover(_app: App, _basePath: string, _settings?: Record<string, unknown>): WorkItemMover {
     return new StubMover();
   }
 

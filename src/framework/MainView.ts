@@ -44,6 +44,9 @@ export class MainView extends ItemView {
   private refreshDebounceTimer: ReturnType<typeof setTimeout> | null = null;
   private pendingRenames: Map<string, PendingRename> = new Map();
 
+  // Cached settings for parser/mover creation in refreshList
+  private settings: Record<string, unknown> = {};
+
   // Resize observer for terminal refit on view switch
   private containerObserver: ResizeObserver | null = null;
 
@@ -222,8 +225,13 @@ export class MainView extends ItemView {
     if (!this.leftPanelEl || !this.rightPanelEl) return;
 
     const settings = await loadAllSettings(this.pluginRef, this.adapter);
-    const parser = this.adapter.createParser(this.app, "");
-    const mover = this.adapter.createMover(this.app, "");
+    this.settings = settings;
+
+    // Allow adapter to perform async initialization (credential fetch, API sync, etc.)
+    await this.adapter.onLoad?.(this.app, settings);
+
+    const parser = this.adapter.createParser(this.app, "", settings);
+    const mover = this.adapter.createMover(this.app, "", settings);
     const cardRenderer = this.adapter.createCardRenderer();
     const promptBuilder = this.adapter.createPromptBuilder();
 
@@ -430,7 +438,7 @@ export class MainView extends ItemView {
 
   private async refreshList(): Promise<void> {
     if (!this.listPanel) return;
-    const parser = this.adapter.createParser(this.app, "");
+    const parser = this.adapter.createParser(this.app, "", this.settings);
     const items = await parser.loadAll();
     const groups = parser.groupByColumn(items);
     const data = (await this.pluginRef.loadData()) || {};
