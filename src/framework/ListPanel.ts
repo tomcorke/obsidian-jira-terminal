@@ -428,6 +428,11 @@ export class ListPanel {
 
   private deleteItem(item: WorkItem): void {
     new DangerConfirm(this.app, `Delete "${item.title}"`, async () => {
+      // Let adapter intercept deletion (e.g. API-backed items)
+      if (this.adapter.onDelete) {
+        const proceed = await this.adapter.onDelete(item);
+        if (!proceed) return;
+      }
       const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
       if (!file) return;
       await this.app.vault.trash(file, false);
