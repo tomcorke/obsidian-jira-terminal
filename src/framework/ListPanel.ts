@@ -347,7 +347,9 @@ export class ListPanel {
         `Ask the user what the scope of this new split task should be. ` +
         `Once the user answers, immediately update the new task file: ` +
         `set the title, write a brief description with relevant context and references from the original task, ` +
-        `and log the scope in the activity log.`;
+        `and log the scope in the activity log. ` +
+        `Then rename the file to match the convention TASK-YYYYMMDD-HHMM-slugified-title.md ` +
+        `(use the existing date prefix, replace the "pending-XXXXXXXX" segment with a slug of the final title).`;
 
       // Defer select + spawn until the vault watcher refreshes and the new item appears
       this.pendingSplit = { id: result.id, prompt };

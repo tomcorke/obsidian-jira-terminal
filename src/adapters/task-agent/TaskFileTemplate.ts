@@ -76,6 +76,17 @@ export function generateTaskFilename(title: string): string {
   return `TASK-${y}${m}${d}-${h}${min}-${slug}.md`;
 }
 
+export function generatePendingFilename(): string {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const uuid = crypto.randomUUID().slice(0, 8);
+  return `TASK-${y}${m}${d}-${h}${min}-pending-${uuid}.md`;
+}
+
 function formatActivityDate(date: Date): string {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, "0");
