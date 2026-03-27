@@ -36,7 +36,7 @@ export const JIRA_CONFIG: PluginConfig = {
     {
       key: "jiraJql",
       name: "JQL override",
-      description: "Custom JQL (leave empty for board default: non-Done issues)",
+      description: "Custom JQL (leave empty for default: project = CASTLE AND status != Done)",
       type: "text",
       default: "",
     },

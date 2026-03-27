@@ -46,10 +46,17 @@ export class JiraSync {
     this.isSyncing = true;
 
     try {
-      const jql = this.buildJql();
-      console.log("[jira-terminal] Syncing with JQL:", jql);
+      const { jql, useAgileApi } = this.getJqlAndEndpoint();
+      let issues;
 
-      const issues = await this.client.searchIssues(jql);
+      if (useAgileApi) {
+        const boardId = this.settings["adapter.jiraBoardId"];
+        console.log("[jira-terminal] Syncing board", boardId);
+        issues = await this.client.getBoardIssues(boardId);
+      } else {
+        console.log("[jira-terminal] Syncing with JQL:", jql);
+        issues = await this.client.searchIssues(jql);
+      }
       console.log("[jira-terminal] Fetched", issues.length, "issues");
 
       await this.ensureFolders();
@@ -116,12 +123,17 @@ export class JiraSync {
     return this.client;
   }
 
-  private buildJql(): string {
+  private getJqlAndEndpoint(): { jql: string; useAgileApi: boolean } {
     const custom = this.settings["adapter.jiraJql"];
-    if (custom) return custom;
+    if (custom) return { jql: custom, useAgileApi: false };
 
-    // Default: all non-Done issues, ordered by rank
-    return `status != Done ORDER BY Rank ASC`;
+    // Use the board ID from settings to scope issues to the configured board
+    const boardId = this.settings["adapter.jiraBoardId"];
+    if (boardId) {
+      return { jql: "", useAgileApi: true };
+    }
+
+    return { jql: "status != Done ORDER BY Rank ASC", useAgileApi: false };
   }
 
   private async ensureFolders(): Promise<void> {
