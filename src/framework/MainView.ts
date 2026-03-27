@@ -12,7 +12,7 @@
  */
 import { ItemView, TFile, WorkspaceLeaf } from "obsidian";
 import type { Plugin, EventRef } from "obsidian";
-import type { AdapterBundle, WorkItem } from "../core/interfaces";
+import type { AdapterBundle, WorkItem, WorkItemParser } from "../core/interfaces";
 import { VIEW_TYPE } from "./PluginBase";
 import { ListPanel } from "./ListPanel";
 import { TerminalPanelView } from "./TerminalPanelView";
@@ -46,6 +46,9 @@ export class MainView extends ItemView {
 
   // Cached settings for parser/mover creation in refreshList
   private settings: Record<string, unknown> = {};
+
+  // Cached parser instance (created once in initPanels, reused in refreshList)
+  private parser: WorkItemParser | null = null;
 
   // Resize observer for terminal refit on view switch
   private containerObserver: ResizeObserver | null = null;
@@ -239,7 +242,7 @@ export class MainView extends ItemView {
     // Provide adapters with a way to trigger UI refresh (e.g. after API fetch)
     this.adapter.requestRefresh = () => this.scheduleRefresh();
 
-    const parser = this.adapter.createParser(this.app, "", settings);
+    this.parser = this.adapter.createParser(this.app, "", settings);
     const mover = this.adapter.createMover(this.app, "", settings);
     const cardRenderer = this.adapter.createCardRenderer();
     const promptBuilder = this.adapter.createPromptBuilder();
@@ -354,7 +357,7 @@ export class MainView extends ItemView {
     // isn't parsed when the vault create event fires
     this.vaultEventRefs.push(
       cache.on("changed", (file) => {
-        if (this.listPanel?.getParser()?.isItemFile(file.path)) {
+        if (this.parser?.isItemFile(file.path)) {
           this.scheduleRefresh();
         }
       }),
@@ -444,11 +447,14 @@ export class MainView extends ItemView {
     }, 150);
   }
 
+  resetParser(): void {
+    this.parser = this.adapter.createParser(this.app, "", this.settings);
+  }
+
   private async refreshList(): Promise<void> {
-    if (!this.listPanel) return;
-    const parser = this.adapter.createParser(this.app, "", this.settings);
-    const items = await parser.loadAll();
-    const groups = parser.groupByColumn(items);
+    if (!this.listPanel || !this.parser) return;
+    const items = await this.parser.loadAll();
+    const groups = this.parser.groupByColumn(items);
     const data = (await this.pluginRef.loadData()) || {};
     const customOrder = data.customOrder || {};
     this.listPanel.render(groups, customOrder);
@@ -506,6 +512,9 @@ export class MainView extends ItemView {
 
     // Clear adapter refresh callback to prevent refreshes against disposed DOM
     this.adapter.requestRefresh = undefined;
+
+    // Clean up cached parser
+    this.parser = null;
 
     // Clean up debounce timer
     if (this.refreshDebounceTimer) {
