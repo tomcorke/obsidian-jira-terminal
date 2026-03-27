@@ -523,7 +523,16 @@ export class ListPanel {
 
     const badge = cardEl.createDiv({ cls: "wt-resume-badge" });
     badge.textContent = "\u21bb"; // Clockwise arrow
-    badge.setAttribute("title", `${persisted.length} resumable session(s)`);
+    badge.setAttribute("title", `${persisted.length} resumable session(s) - click to resume`);
+    badge.addEventListener("click", (e) => {
+      e.stopPropagation();
+      // Select the item first so resumed tabs appear in the terminal panel
+      this.selectItem(item);
+      // Resume all persisted sessions for this item
+      for (const session of persisted) {
+        this.terminalPanel.resumeSession(session);
+      }
+    });
   }
 
   // ---------------------------------------------------------------------------

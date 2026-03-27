@@ -343,7 +343,7 @@ export class TerminalPanelView {
     );
 
     const cwd = expandTilde(this.settings["core.defaultTerminalCwd"] || "~");
-    this.tabManager.createTab(
+    const tab = this.tabManager.createTab(
       resolved,
       cwd,
       "Claude",
@@ -352,6 +352,9 @@ export class TerminalPanelView {
       [resolved, ...args],
       sessionId
     );
+    if (tab && this.adapter.transformSessionLabel) {
+      tab.transformLabel = (old, detected) => this.adapter.transformSessionLabel!(old, detected);
+    }
     this.renderTabBar();
   }
 
@@ -376,7 +379,7 @@ export class TerminalPanelView {
     );
 
     const cwd = expandTilde(this.settings["core.defaultTerminalCwd"] || "~");
-    this.tabManager.createTab(
+    const tab = this.tabManager.createTab(
       resolved,
       cwd,
       "Claude (ctx)",
@@ -385,6 +388,9 @@ export class TerminalPanelView {
       [resolved, ...args],
       sessionId
     );
+    if (tab && this.adapter.transformSessionLabel) {
+      tab.transformLabel = (old, detected) => this.adapter.transformSessionLabel!(old, detected);
+    }
     this.renderTabBar();
   }
 
@@ -407,6 +413,11 @@ export class TerminalPanelView {
       [resolved, ...args],
       persisted.claudeSessionId
     );
+
+    // Wire adapter's session label transform hook
+    if (tab && this.adapter.transformSessionLabel) {
+      tab.transformLabel = (old, detected) => this.adapter.transformSessionLabel!(old, detected);
+    }
 
     // 5s grace period: if process exits quickly, keep persisted entry for retry
     if (tab) {
