@@ -534,63 +534,21 @@ export class ListPanel {
     const menu = new Menu();
     const ctx = this.buildCardActionContext(item, columnId);
 
-    // Move to column options
-    for (const col of this.adapter.config.columns) {
-      if (col.id === columnId) continue;
-      menu.addItem((menuItem) => {
-        menuItem
-          .setTitle(`Move to ${col.label}`)
-          .onClick(() => ctx.onMoveToColumn(col.id));
-      });
-    }
-
-    menu.addSeparator();
-
-    menu.addItem((menuItem) => {
-      menuItem
-        .setTitle("Move to Top")
-        .onClick(() => ctx.onMoveToTop());
-    });
-
-    // Adapter-specific menu items
+    // Adapter provides the full menu structure. Framework provides
+    // CardActionContext so the adapter can call framework primitives.
     const adapterItems = this.cardRenderer.getContextMenuItems(item, ctx);
-    if (adapterItems.length > 0) {
-      menu.addSeparator();
-      for (const adapterItem of adapterItems) {
+    for (const adapterItem of adapterItems) {
+      const ai = adapterItem as any;
+      if (ai.separator) {
+        menu.addSeparator();
+      } else {
         menu.addItem((menuItem) => {
           menuItem
-            .setTitle((adapterItem as any).title || "Action")
-            .onClick(() => (adapterItem as any).callback?.());
+            .setTitle(ai.title || "Action")
+            .onClick(() => ai.callback?.());
         });
       }
     }
-
-    menu.addSeparator();
-
-    // Danger actions
-    if (this.terminalPanel.hasSessions(item.id)) {
-      menu.addItem((menuItem) => {
-        menuItem
-          .setTitle("Close All Sessions")
-          .onClick(() => {
-            DangerConfirm.confirm(
-              "Close All Sessions",
-              () => ctx.onCloseSessions()
-            );
-          });
-      });
-    }
-
-    menu.addItem((menuItem) => {
-      menuItem
-        .setTitle("Delete")
-        .onClick(() => {
-          DangerConfirm.confirm(
-            "Delete " + this.adapter.config.itemName,
-            () => ctx.onDelete()
-          );
-        });
-    });
 
     menu.showAtMouseEvent(e);
   }
