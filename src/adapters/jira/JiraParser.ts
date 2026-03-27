@@ -19,7 +19,7 @@ export class JiraParser implements WorkItemParser {
   constructor(
     private app: App,
     _basePath: string,
-    private settings: Record<string, any>
+    private settings: Record<string, any>,
   ) {
     this.basePath = this.settings["adapter.jiraCachePath"] || "Jira/Castle Greenflag";
   }
@@ -63,6 +63,76 @@ export class JiraParser implements WorkItemParser {
     };
   }
 
+  /**
+   * Parse raw Jira issue data into a WorkItem without requiring a TFile.
+   * Accepts either a JiraIssue-shaped object or a frontmatter-shaped object.
+   * Enables future optimization where JiraSync could provide items directly
+   * to the parser without writing cache files first.
+   */
+  parseData(data: Record<string, unknown>): WorkItem | null {
+    // Support JiraIssue shape (from API) - has "key" and "summary"
+    if (data.key && data.summary) {
+      const status = data.status as JiraStatus;
+      const column = status ? STATUS_TO_COLUMN[status] || "new" : "new";
+      return {
+        id: data.key as string,
+        path: "",
+        title: data.summary as string,
+        state: column,
+        metadata: {
+          jiraKey: data.key,
+          jiraType: data.issueType || "Task",
+          jiraStatus: data.status || "New",
+          assignee: data.assignee || "",
+          priority: data.priority || "Medium",
+          sprint: data.sprint || "",
+          storyPoints: data.storyPoints || 0,
+          parentKey: data.parentKey || "",
+          labels: data.labels || [],
+          jiraUrl: data.url || "",
+          jiraUpdated: data.updated || "",
+          rank: data.rank ?? 999,
+          pendingTransition: false,
+          created: data.created || "",
+          updated: data.updated || "",
+        },
+      };
+    }
+
+    // Support frontmatter shape (from cache file data)
+    const jiraKey = data["jira-key"] as string | undefined;
+    if (!jiraKey) return null;
+
+    const jiraStatus = data["jira-status"] as JiraStatus | undefined;
+    const column = jiraStatus
+      ? STATUS_TO_COLUMN[jiraStatus] || (data.state as KanbanColumn) || "new"
+      : (data.state as KanbanColumn) || "new";
+
+    return {
+      id: (data.id as string) || "",
+      path: (data.path as string) || "",
+      title: (data.title as string) || jiraKey,
+      state: column,
+      metadata: {
+        jiraKey,
+        jiraType: data["jira-type"] || "Task",
+        jiraStatus: data["jira-status"] || "New",
+        assignee: data["jira-assignee"] || "",
+        priority: data["jira-priority"] || "Medium",
+        sprint: data["jira-sprint"] || "",
+        storyPoints: data["jira-story-points"] || 0,
+        parentKey: data["jira-parent"] || "",
+        labels: data["jira-labels"] || [],
+        jiraUrl: data["jira-url"] || "",
+        jiraUpdated: data["jira-updated"] || "",
+        rank: data["jira-rank"] ?? 999,
+        pendingTransition: data["_pending-transition"] || false,
+        created: data.created || "",
+        updated: data.updated || "",
+      },
+    };
+  }
+
   async loadAll(): Promise<WorkItem[]> {
     const items: WorkItem[] = [];
 
@@ -73,9 +143,7 @@ export class JiraParser implements WorkItemParser {
 
       const files = this.app.vault
         .getMarkdownFiles()
-        .filter(
-          (f) => f.path.startsWith(folderPath + "/") && f.extension === "md"
-        );
+        .filter((f) => f.path.startsWith(folderPath + "/") && f.extension === "md");
 
       for (const file of files) {
         const item = this.parse(file);

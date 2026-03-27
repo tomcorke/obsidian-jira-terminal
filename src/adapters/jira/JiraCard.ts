@@ -5,12 +5,8 @@
  * All Jira-specific styles must be inlined or added to the shared styles.css.
  */
 import type { MenuItem } from "obsidian";
-import type {
-  WorkItem,
-  CardRenderer,
-  CardActionContext,
-} from "../../core/interfaces";
-import { KANBAN_COLUMNS, COLUMN_LABELS, type KanbanColumn } from "./types";
+import type { WorkItem, CardRenderer, CardActionContext } from "../../core/interfaces";
+import { KANBAN_COLUMNS, COLUMN_LABELS } from "./types";
 
 const TYPE_COLORS: Record<string, string> = {
   Bug: "#e5484d",
@@ -128,10 +124,7 @@ export class JiraCard implements CardRenderer {
     return card;
   }
 
-  getContextMenuItems(
-    item: WorkItem,
-    ctx: CardActionContext
-  ): MenuItem[] {
+  getContextMenuItems(item: WorkItem, ctx: CardActionContext): MenuItem[] {
     const items: MenuItem[] = [];
     const meta = (item.metadata || {}) as Record<string, any>;
 
@@ -197,7 +190,7 @@ export class JiraCard implements CardRenderer {
         document.dispatchEvent(
           new CustomEvent("jira-terminal:refresh-issue", {
             detail: { key: meta.jiraKey },
-          })
+          }),
         );
       },
     });

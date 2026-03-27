@@ -6,7 +6,7 @@
  * Uses the framework's onLoad() hook for async initialization and receives
  * settings directly from createParser/createMover factory methods.
  */
-import type { App, WorkspaceLeaf } from "obsidian";
+import type { App } from "obsidian";
 import {
   BaseAdapter,
   type WorkItem,
@@ -28,6 +28,22 @@ export class JiraAdapter extends BaseAdapter {
 
   private sync: JiraSync | null = null;
   private _parser: JiraParser | null = null;
+  private _requestRefresh?: () => void;
+
+  /**
+   * Override requestRefresh so that when the framework assigns the callback
+   * (after onLoad returns), we automatically forward it to JiraSync.
+   */
+  get requestRefresh(): (() => void) | undefined {
+    return this._requestRefresh;
+  }
+
+  set requestRefresh(fn: (() => void) | undefined) {
+    this._requestRefresh = fn;
+    if (fn && this.sync) {
+      this.sync.setRequestRefresh(fn);
+    }
+  }
 
   /**
    * Async initialization hook called by the framework before
@@ -36,6 +52,7 @@ export class JiraAdapter extends BaseAdapter {
   async onLoad(app: App, settings: Record<string, unknown>): Promise<void> {
     const s = settings as Record<string, any>;
     this.sync = new JiraSync(app, s);
+
     this.sync.sync();
     this.sync.startPolling();
 
@@ -84,8 +101,8 @@ export class JiraAdapter extends BaseAdapter {
    * Users should create issues in Jira directly.
    */
   async onItemCreated(
-    title: string,
-    settings: Record<string, unknown>
+    _title: string,
+    _settings: Record<string, unknown>,
   ): Promise<{ id: string; columnId: string } | void> {
     // Could create a Jira issue here in future, but for now just inform the user
     const { Notice } = await import("obsidian");
@@ -93,10 +110,22 @@ export class JiraAdapter extends BaseAdapter {
     return;
   }
 
-  transformSessionLabel(
-    _oldLabel: string,
-    detectedLabel: string
-  ): string {
+  /**
+   * Handle item deletion. Allow vault.trash() for cache files since they
+   * are just local mirrors of Jira data and will be recreated on next sync.
+   * The Jira issue itself is NOT deleted.
+   */
+  async onDelete(item: WorkItem): Promise<boolean> {
+    const jiraKey = item.metadata?.jiraKey;
+    if (jiraKey) {
+      console.log(
+        `[jira-terminal] Deleting local cache for ${jiraKey} - Jira issue is NOT deleted`,
+      );
+    }
+    return true;
+  }
+
+  transformSessionLabel(_oldLabel: string, detectedLabel: string): string {
     return detectedLabel;
   }
 }

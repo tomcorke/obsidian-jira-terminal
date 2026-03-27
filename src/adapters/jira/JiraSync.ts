@@ -1,36 +1,33 @@
 /**
  * JiraSync - fetches issues from Jira API and syncs them to vault cache files.
  *
- * Framework coupling issue: the adapter framework has no async initialization
- * hook and no way to trigger a list refresh after API data arrives. JiraSync
- * works around this by writing vault files (which triggers vault change events
- * that the framework listens to), but this is indirect and unreliable for the
- * initial load.
+ * Uses the framework's requestRefresh callback (set by the adapter) to trigger
+ * a single debounced UI refresh after sync completes, rather than relying on
+ * individual vault file change events.
  */
 import type { App, TFile } from "obsidian";
 import { Notice } from "obsidian";
 import { JiraClient } from "./JiraClient";
-import {
-  generateCacheContent,
-  updateCacheContent,
-  getCacheFilePath,
-} from "./JiraCacheFile";
-import {
-  type JiraIssue,
-  type KanbanColumn,
-  STATUS_TO_COLUMN,
-  KANBAN_COLUMNS,
-  COLUMN_FOLDERS,
-} from "./types";
+import { generateCacheContent, updateCacheContent, getCacheFilePath } from "./JiraCacheFile";
+import { type JiraIssue, STATUS_TO_COLUMN, KANBAN_COLUMNS, COLUMN_FOLDERS } from "./types";
 
 export class JiraSync {
   private client: JiraClient;
   private pollTimer: ReturnType<typeof setInterval> | null = null;
   private isSyncing = false;
+  private _requestRefresh: (() => void) | null = null;
+
+  /**
+   * Set the framework-provided refresh callback. Called by the adapter
+   * when the framework assigns requestRefresh to the AdapterBundle.
+   */
+  setRequestRefresh(fn: () => void): void {
+    this._requestRefresh = fn;
+  }
 
   constructor(
     private app: App,
-    private settings: Record<string, any>
+    private settings: Record<string, any>,
   ) {
     const baseUrl = settings["adapter.jiraBaseUrl"] || "https://skyscanner.atlassian.net";
     const username = settings["adapter.jiraUsername"] || "";
@@ -59,6 +56,12 @@ export class JiraSync {
       await this.reconcile(issues);
 
       console.log("[jira-terminal] Sync complete");
+
+      // Trigger a single debounced UI refresh instead of relying on
+      // individual vault file change events from each cache write
+      if (this._requestRefresh) {
+        this._requestRefresh();
+      }
     } catch (err: any) {
       console.error("[jira-terminal] Sync failed:", err);
       new Notice(`Jira sync failed: ${err.message || err}`);
@@ -75,6 +78,9 @@ export class JiraSync {
       const issue = await this.client.getIssue(key);
       await this.ensureFolders();
       await this.reconcileOne(issue);
+      if (this._requestRefresh) {
+        this._requestRefresh();
+      }
     } catch (err: any) {
       console.error("[jira-terminal] Single sync failed:", err);
       new Notice(`Failed to refresh ${key}: ${err.message || err}`);
@@ -114,8 +120,7 @@ export class JiraSync {
     const custom = this.settings["adapter.jiraJql"];
     if (custom) return custom;
 
-    const boardId = this.settings["adapter.jiraBoardId"] || "2621";
-    // Default: all non-Done issues from the board, ordered by rank
+    // Default: all non-Done issues, ordered by rank
     return `status != Done ORDER BY Rank ASC`;
   }
 
@@ -176,10 +181,7 @@ export class JiraSync {
     }
   }
 
-  private async reconcileOne(
-    issue: JiraIssue,
-    existingFile?: TFile
-  ): Promise<void> {
+  private async reconcileOne(issue: JiraIssue, existingFile?: TFile): Promise<void> {
     const targetColumn = STATUS_TO_COLUMN[issue.status] || "new";
     const targetPath = getCacheFilePath(this.basePath, targetColumn, issue.key);
 
