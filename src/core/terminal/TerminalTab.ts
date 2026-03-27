@@ -7,6 +7,7 @@
 import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import { WebLinksAddon } from "@xterm/addon-web-links";
+import { SearchAddon } from "@xterm/addon-search";
 import type { ChildProcess } from "child_process";
 import { StringDecoder } from "string_decoder";
 import { expandTilde, stripAnsi, electronRequire } from "../utils";
@@ -36,8 +37,10 @@ export class TerminalTab {
   onStateChange?: (state: ClaudeState) => void;
 
   private fitAddon: FitAddon;
+  private searchAddon: SearchAddon;
   private resizeObserver: ResizeObserver;
   private _documentCleanups: (() => void)[] = [];
+  private _searchBarEl: HTMLElement | null = null;
   private _resizeDebounce: ReturnType<typeof setTimeout> | null = null;
 
   // Minimum container width for fitAddon.fit(). When the plugin view is
@@ -111,6 +114,10 @@ export class TerminalTab {
     this.fitAddon = new FitAddon();
     this.terminal.loadAddon(this.fitAddon);
 
+    // Search addon (Cmd+F)
+    this.searchAddon = new SearchAddon();
+    this.terminal.loadAddon(this.searchAddon);
+
     // Web links - Cmd+click to open URLs in browser
     const electronShell = electronRequire("electron").shell;
     this.terminal.loadAddon(new WebLinksAddon((_, uri) => {
@@ -129,7 +136,8 @@ export class TerminalTab {
     attachBubbleCapture(this.containerEl);
     const captureCleanup = attachCapturePhase(
       this.containerEl,
-      () => this.process
+      () => this.process,
+      () => this.toggleSearchBar()
     );
     this._documentCleanups.push(captureCleanup);
 
@@ -297,6 +305,78 @@ export class TerminalTab {
         callback(links.length > 0 ? links : undefined);
       },
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Search bar (Cmd+F)
+  // ---------------------------------------------------------------------------
+
+  toggleSearchBar(): void {
+    if (this._searchBarEl) {
+      this._searchBarEl.remove();
+      this._searchBarEl = null;
+      this.terminal.focus();
+      return;
+    }
+
+    const bar = document.createElement("div");
+    bar.className = "wt-search-bar";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = "Search...";
+    input.className = "wt-search-input";
+
+    const prevBtn = document.createElement("button");
+    prevBtn.textContent = "\u2191";
+    prevBtn.className = "wt-search-nav";
+    prevBtn.title = "Previous match";
+
+    const nextBtn = document.createElement("button");
+    nextBtn.textContent = "\u2193";
+    nextBtn.className = "wt-search-nav";
+    nextBtn.title = "Next match";
+
+    const closeBtn = document.createElement("button");
+    closeBtn.textContent = "\u00d7";
+    closeBtn.className = "wt-search-close";
+    closeBtn.title = "Close";
+
+    bar.appendChild(input);
+    bar.appendChild(prevBtn);
+    bar.appendChild(nextBtn);
+    bar.appendChild(closeBtn);
+    this.containerEl.appendChild(bar);
+    this._searchBarEl = bar;
+
+    input.addEventListener("input", () => {
+      if (input.value) {
+        this.searchAddon.findNext(input.value, { decorations: { activeMatchColorOverviewRuler: "#ffa500" } });
+      } else {
+        this.searchAddon.clearDecorations();
+      }
+    });
+
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          this.searchAddon.findPrevious(input.value);
+        } else {
+          this.searchAddon.findNext(input.value);
+        }
+      } else if (e.key === "Escape") {
+        e.preventDefault();
+        this.toggleSearchBar();
+      }
+      e.stopPropagation();
+    });
+
+    prevBtn.addEventListener("click", () => this.searchAddon.findPrevious(input.value));
+    nextBtn.addEventListener("click", () => this.searchAddon.findNext(input.value));
+    closeBtn.addEventListener("click", () => this.toggleSearchBar());
+
+    input.focus();
   }
 
   // ---------------------------------------------------------------------------
@@ -593,6 +673,7 @@ export class TerminalTab {
       sessionType: this.sessionType,
       terminal: this.terminal,
       fitAddon: this.fitAddon,
+      searchAddon: this.searchAddon,
       containerEl: this.containerEl,
       process: this.process,
       documentListeners: this._documentCleanups.map((fn, i) => ({
@@ -618,6 +699,7 @@ export class TerminalTab {
     tab.sessionType = stored.sessionType;
     tab.terminal = stored.terminal;
     tab.fitAddon = stored.fitAddon;
+    tab.searchAddon = stored.searchAddon;
     tab.containerEl = stored.containerEl;
     tab.process = stored.process;
     tab._documentCleanups = [];
@@ -637,7 +719,8 @@ export class TerminalTab {
     attachBubbleCapture(stored.containerEl);
     const captureCleanup = attachCapturePhase(
       stored.containerEl,
-      () => tab.process
+      () => tab.process,
+      () => tab.toggleSearchBar()
     );
     tab._documentCleanups = [captureCleanup];
 

@@ -36,7 +36,8 @@ export function attachBubbleCapture(containerEl: HTMLElement): void {
  */
 export function attachCapturePhase(
   containerEl: HTMLElement,
-  getProcess: () => ChildProcess | null
+  getProcess: () => ChildProcess | null,
+  onSearch?: () => void
 ): () => void {
   const textareaEl = containerEl.querySelector(
     ".xterm-helper-textarea"
@@ -44,6 +45,14 @@ export function attachCapturePhase(
 
   const handler = (e: KeyboardEvent) => {
     if (!textareaEl || document.activeElement !== textareaEl) return;
+
+    // Cmd+F: toggle search bar (intercept before Obsidian's find)
+    if (e.metaKey && e.key === "f" && onSearch) {
+      e.stopImmediatePropagation();
+      e.preventDefault();
+      onSearch();
+      return;
+    }
 
     let seq: string | null = null;
 
