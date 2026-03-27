@@ -3,6 +3,7 @@ import type { WorkItem } from "../../core/interfaces";
 
 export class TaskDetailView {
   private editorLeaf: WorkspaceLeaf | null = null;
+  private _showInProgress = false;
 
   constructor(private app: App) {}
 
@@ -10,20 +11,27 @@ export class TaskDetailView {
     const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
     if (!file) return;
 
-    await this.ensureEditorLeaf(ownerLeaf);
+    // Guard against re-entrant calls (e.g. rapid selection changes)
+    if (this._showInProgress) return;
+    this._showInProgress = true;
+    try {
+      this.ensureEditorLeaf(ownerLeaf);
 
-    if (this.editorLeaf) {
-      await this.editorLeaf.openFile(file);
+      if (this.editorLeaf) {
+        await this.editorLeaf.openFile(file);
+      }
+    } finally {
+      this._showInProgress = false;
     }
   }
 
-  private async ensureEditorLeaf(ownerLeaf: WorkspaceLeaf): Promise<void> {
-    // Check if our leaf is still alive
+  private ensureEditorLeaf(ownerLeaf: WorkspaceLeaf): void {
+    // Check if our leaf is still attached to the workspace.
+    // Uses parent reference instead of getLeavesOfType("markdown") because
+    // a freshly-split leaf starts as type "empty" before openFile completes.
     if (this.editorLeaf) {
-      const found = this.app.workspace
-        .getLeavesOfType("markdown")
-        .some((l) => l === this.editorLeaf);
-      if (!found) {
+      const parent = (this.editorLeaf as any).parent;
+      if (!parent) {
         this.editorLeaf = null;
       }
     }

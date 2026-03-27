@@ -349,7 +349,7 @@ export class TerminalPanelView {
       "Claude",
       "claude",
       undefined,
-      args,
+      [resolved, ...args],
       sessionId
     );
     this.renderTabBar();
@@ -382,7 +382,7 @@ export class TerminalPanelView {
       "Claude (ctx)",
       "claude-with-context",
       undefined,
-      args,
+      [resolved, ...args],
       sessionId
     );
     this.renderTabBar();
@@ -404,7 +404,7 @@ export class TerminalPanelView {
       persisted.label,
       persisted.sessionType,
       undefined,
-      args,
+      [resolved, ...args],
       persisted.claudeSessionId
     );
 
