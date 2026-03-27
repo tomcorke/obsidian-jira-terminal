@@ -150,9 +150,9 @@ export interface AdapterBundle {
   /** Plugin configuration (columns, settings, item name). */
   config: PluginConfig;
   /** Create a parser for loading/parsing work items from the vault. */
-  createParser(app: App, basePath: string): WorkItemParser;
+  createParser(app: App, basePath: string, settings: Record<string, unknown>): WorkItemParser;
   /** Create a mover for state transitions between columns. */
-  createMover(app: App, basePath: string): WorkItemMover;
+  createMover(app: App, basePath: string, settings: Record<string, unknown>): WorkItemMover;
   /** Create a card renderer for the list panel. */
   createCardRenderer(): CardRenderer;
   /** Create a prompt builder for Claude context sessions. */
@@ -192,8 +192,8 @@ export interface AdapterBundle {
  */
 export abstract class BaseAdapter implements AdapterBundle {
   abstract config: PluginConfig;
-  abstract createParser(app: App, basePath: string): WorkItemParser;
-  abstract createMover(app: App, basePath: string): WorkItemMover;
+  abstract createParser(app: App, basePath: string, settings: Record<string, unknown>): WorkItemParser;
+  abstract createMover(app: App, basePath: string, settings: Record<string, unknown>): WorkItemMover;
   abstract createCardRenderer(): CardRenderer;
   abstract createPromptBuilder(): WorkItemPromptBuilder;
 
