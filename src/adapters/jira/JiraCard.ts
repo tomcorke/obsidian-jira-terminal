@@ -1,28 +1,31 @@
 /**
  * JiraCard - renders Jira issue cards with type/priority/assignee badges.
  *
- * Framework coupling issue: no mechanism for adapter-contributed CSS.
- * All Jira-specific styles must be inlined or added to the shared styles.css.
+ * Jira-specific styles are injected by the adapter via getStyles().
+ * Card elements use CSS classes (e.g. jira-type-bug, jira-priority-high)
+ * instead of inline styles.
  */
 import type { MenuItem } from "obsidian";
 import type { WorkItem, CardRenderer, CardActionContext } from "../../core/interfaces";
 import { KANBAN_COLUMNS, COLUMN_LABELS } from "./types";
 
-const TYPE_COLORS: Record<string, string> = {
-  Bug: "#e5484d",
-  Story: "#30a46c",
-  Task: "#3b82f6",
-  Epic: "#8b5cf6",
-  Deliverable: "#d946ef",
-  "Sub-task": "#6b7280",
+/** Map issue type names to CSS class suffixes */
+const TYPE_CSS_CLASS: Record<string, string> = {
+  Bug: "jira-type-bug",
+  Story: "jira-type-story",
+  Task: "jira-type-task",
+  Epic: "jira-type-epic",
+  Deliverable: "jira-type-deliverable",
+  "Sub-task": "jira-type-sub-task",
 };
 
-const PRIORITY_COLORS: Record<string, string> = {
-  Highest: "#e5484d",
-  High: "#f76b15",
-  Medium: "#e5a100",
-  Low: "#3b82f6",
-  Lowest: "#6b7280",
+/** Map priority names to CSS class suffixes */
+const PRIORITY_CSS_CLASS: Record<string, string> = {
+  Highest: "jira-priority-highest",
+  High: "jira-priority-high",
+  Medium: "jira-priority-medium",
+  Low: "jira-priority-low",
+  Lowest: "jira-priority-lowest",
 };
 
 export class JiraCard implements CardRenderer {
@@ -58,21 +61,20 @@ export class JiraCard implements CardRenderer {
 
     // Issue type badge
     const typeStr = meta.jiraType || "Task";
-    const typeBadge = metaRow.createSpan({ cls: "wt-card-source" });
+    const typeCls = TYPE_CSS_CLASS[typeStr] || "";
+    const typeBadge = metaRow.createSpan({
+      cls: `wt-card-source ${typeCls}`.trim(),
+    });
     typeBadge.textContent = typeStr;
-    const typeColor = TYPE_COLORS[typeStr];
-    if (typeColor) {
-      typeBadge.style.background = typeColor;
-      typeBadge.style.color = "white";
-    }
 
-    // Priority badge
+    // Priority badge (only shown for Highest/High)
     const priorityStr = meta.priority || "Medium";
     if (priorityStr === "Highest" || priorityStr === "High") {
-      const priBadge = metaRow.createSpan({ cls: "wt-card-source" });
+      const priCls = PRIORITY_CSS_CLASS[priorityStr] || "";
+      const priBadge = metaRow.createSpan({
+        cls: `wt-card-source ${priCls}`.trim(),
+      });
       priBadge.textContent = priorityStr;
-      priBadge.style.background = PRIORITY_COLORS[priorityStr] || "";
-      priBadge.style.color = "white";
     }
 
     // Assignee

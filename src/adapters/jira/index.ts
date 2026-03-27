@@ -27,7 +27,6 @@ export class JiraAdapter extends BaseAdapter {
   config: PluginConfig = JIRA_CONFIG;
 
   private sync: JiraSync | null = null;
-  private _parser: JiraParser | null = null;
   private _requestRefresh?: () => void;
 
   /**
@@ -68,15 +67,12 @@ export class JiraAdapter extends BaseAdapter {
   /**
    * Create parser for loading/parsing work items from the vault.
    * Settings are provided by the framework - no need to reconstruct them.
+   * The framework caches the parser instance (created once in initPanels,
+   * reused in refreshList), so no adapter-side caching is needed.
    */
   createParser(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemParser {
     const s = (settings || {}) as Record<string, any>;
-
-    // Cache parser to avoid recreating on every refresh cycle
-    if (!this._parser) {
-      this._parser = new JiraParser(app, basePath, s);
-    }
-    return this._parser;
+    return new JiraParser(app, basePath, s);
   }
 
   createMover(app: App, basePath: string, settings?: Record<string, unknown>): WorkItemMover {
@@ -123,6 +119,37 @@ export class JiraAdapter extends BaseAdapter {
       );
     }
     return true;
+  }
+
+  /**
+   * Adapter-contributed CSS injected by the framework into document.head.
+   * Provides Jira-specific section header colors, issue type badge colors,
+   * and priority badge colors.
+   */
+  getStyles(): string {
+    return `
+      /* Section header colors by column */
+      .wt-section-header-new { border-bottom-color: var(--text-muted); }
+      .wt-section-header-in-progress { border-bottom-color: var(--interactive-accent); }
+      .wt-section-header-ready-for-test { border-bottom-color: #e5a100; }
+      .wt-section-header-testing { border-bottom-color: #8b5cf6; }
+      .wt-section-header-done { border-bottom-color: #38a169; }
+
+      /* Issue type badge colors */
+      .jira-type-bug { background: #e5484d; color: white; }
+      .jira-type-story { background: #30a46c; color: white; }
+      .jira-type-task { background: #3b82f6; color: white; }
+      .jira-type-epic { background: #8b5cf6; color: white; }
+      .jira-type-deliverable { background: #d946ef; color: white; }
+      .jira-type-sub-task { background: #6b7280; color: white; }
+
+      /* Priority badge colors */
+      .jira-priority-highest { background: #e5484d; color: white; }
+      .jira-priority-high { background: #f76b15; color: white; }
+      .jira-priority-medium { background: #e5a100; color: white; }
+      .jira-priority-low { background: #3b82f6; color: white; }
+      .jira-priority-lowest { background: #6b7280; color: white; }
+    `;
   }
 
   transformSessionLabel(_oldLabel: string, detectedLabel: string): string {
