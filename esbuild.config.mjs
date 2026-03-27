@@ -37,7 +37,7 @@ function triggerHotReload() {
           },
         });
         req.on("upgrade", (_res, socket) => {
-          const expression = `app.commands.executeCommandById('work-terminal:reload-plugin')`;
+          const expression = `app.commands.executeCommandById('jira-terminal:reload-plugin')`;
           const msg = JSON.stringify({
             id: 1,
             method: "Runtime.evaluate",

@@ -1,7 +1,7 @@
 {
-  "name": "obsidian-work-terminal",
+  "name": "obsidian-jira-terminal",
   "version": "0.1.0",
-  "description": "Obsidian plugin: modular work item terminal with adapter-based extensibility",
+  "description": "Obsidian plugin: Jira board terminal with per-ticket tabbed terminals",
   "main": "main.js",
   "scripts": {
     "dev": "node esbuild.config.mjs --watch",

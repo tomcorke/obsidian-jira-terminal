@@ -406,7 +406,7 @@ export class TerminalTab {
     // Find pty-wrapper.py
     let wrapperPath: string;
     const candidates = [
-      path.join(home, "working/obsidian-work-terminal/pty-wrapper.py"),
+      path.join(home, "working/obsidian-jira-terminal/pty-wrapper.py"),
       path.join(__dirname, "pty-wrapper.py"),
     ];
     wrapperPath = candidates.find((p: string) => {

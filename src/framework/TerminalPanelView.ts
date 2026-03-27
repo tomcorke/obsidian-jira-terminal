@@ -543,11 +543,13 @@ export class TerminalPanelView {
           // Failed resume - don't remove persisted entry
           console.log("[work-terminal] Resume failed (exited in", lived, "ms), keeping for retry");
         } else {
-          // Successful resume - remove from persisted list and sync to disk
+          // Successful resume - remove from persisted list and re-persist to disk
           this.persistedSessions = this.persistedSessions.filter(
             (s) => s.claudeSessionId !== persisted.claudeSessionId
           );
-          this.persistSessions().catch(() => {});
+          if (this.persistedSessions.length === 0) {
+            SessionPersistence.clearPersistedFromDisk(this.plugin).catch(() => {});
+          }
         }
         origExit?.(code, signal);
       };

@@ -6,7 +6,7 @@ import { Plugin } from "obsidian";
 import type { AdapterBundle } from "../core/interfaces";
 import { SessionPersistence } from "../core/session/SessionPersistence";
 
-export const VIEW_TYPE = "work-terminal-view";
+export const VIEW_TYPE = "jira-terminal-view";
 
 export abstract class PluginBase extends Plugin {
   protected adapter: AdapterBundle;
@@ -24,11 +24,11 @@ export abstract class PluginBase extends Plugin {
 
     this.registerView(VIEW_TYPE, (leaf) => new MainView(leaf, this.adapter, this));
 
-    this.addRibbonIcon("terminal", "Work Terminal", () => this.activateView());
+    this.addRibbonIcon("terminal", "Jira Terminal", () => this.activateView());
 
     this.addCommand({
-      id: "open-work-terminal",
-      name: "Open Work Terminal",
+      id: "open-jira-terminal",
+      name: "Open Jira Terminal",
       callback: () => this.activateView(),
     });
 
@@ -67,12 +67,12 @@ export abstract class PluginBase extends Plugin {
 
     const appRef = this.app;
     const plugins = (appRef as any).plugins;
-    await plugins.disablePlugin("work-terminal");
-    await plugins.enablePlugin("work-terminal");
+    await plugins.disablePlugin("jira-terminal");
+    await plugins.enablePlugin("jira-terminal");
 
     // The new plugin instance re-registered the view type. Open the view
     // so onOpen() fires and picks up stashed sessions from window store.
-    const newPlugin = plugins.plugins["work-terminal"];
+    const newPlugin = plugins.plugins["jira-terminal"];
     if (newPlugin && typeof newPlugin.activateView === "function") {
       await newPlugin.activateView();
     }
@@ -87,9 +87,8 @@ export abstract class PluginBase extends Plugin {
     // Best-effort persist as backup - onClose() should have already persisted,
     // but Obsidian may not always honor async cleanup in onClose during shutdown.
     if (!this._isReloading) {
-      // Iterate all leaves to persist sessions from every open Work Terminal view
-      const leaves = this.app.workspace.getLeavesOfType(VIEW_TYPE);
-      for (const leaf of leaves) {
+      const leaf = this.app.workspace.getLeavesOfType(VIEW_TYPE)[0];
+      if (leaf) {
         const view = leaf.view as any;
         const sessions = view?.terminalPanel?.tabManager?.getSessions?.();
         if (sessions) {
