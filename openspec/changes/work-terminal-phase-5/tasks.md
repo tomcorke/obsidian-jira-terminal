@@ -19,10 +19,10 @@
 
 - [x] 3.1 Test PTY spawning: open Shell tab, verify interactive shell with correct cwd
 - [ ] 3.2 Test keyboard interception: verify Option+Arrow, Shift+Enter, Option+Backspace in terminal
-- [ ] 3.3 Test resize protocol: resize panel, verify terminal dimensions update via OSC sequence
+- [x] 3.3 Test resize protocol: resize panel, verify terminal dimensions update via OSC sequence
 - [x] 3.4 Test xterm CSS injection and rendering
 - [ ] 3.5 Test scroll-to-bottom button appearance on scroll-up
-- [ ] 3.6 Test 3s keep-alive on early process exit
+- [x] 3.6 Test 3s keep-alive on early process exit
 - [x] 3.7 Test Claude spawning: open Claude tab, verify binary resolution and PATH augmentation
 
 ## 4. Tab Management Integration Testing
@@ -30,13 +30,13 @@
 - [x] 4.1 Test tab bar layout: max-width tabs, ellipsis, action buttons pinned right
 - [ ] 4.2 Test tab drag-and-drop reordering with accent border indicator
 - [ ] 4.3 Test tab context menu (Rename, Restart Task Agent, Move to Task)
-- [ ] 4.4 Test active tab memory per work item (switch items, verify tab restored)
+- [x] 4.4 Test active tab memory per work item (switch items, verify tab restored)
 - [ ] 4.5 Test tab inline rename with armed-blur focus pattern
 
 ## 5. Session Persistence Integration Testing
 
 - [x] 5.1 Test window-global stash: hot-reload plugin, verify terminals survive
-- [ ] 5.2 Test disk persistence: spawn Claude session, verify data.json entry with version: 1
+- [x] 5.2 Test disk persistence: spawn Claude session, verify data.json entry with version: 1
 - [ ] 5.3 Test session resume: reload Obsidian (not hot-reload), verify `--resume` with UUID
 - [ ] 5.4 Test 7-day retention pruning of old sessions
 
@@ -49,7 +49,7 @@
 - [ ] 6.5 Test Claude state indicators (active: green spinner, waiting: amber glow, idle: depleting arc with --idle-offset continuity)
 - [ ] 6.6 Test suppress-waiting-on-visible-tabs behaviour
 - [x] 6.7 Test filter input with case-insensitive 100ms debounce
-- [ ] 6.8 Test move-to-top button (hover reveal, moves to top, selects task)
+- [x] 6.8 Test move-to-top button (hover reveal, moves to top, selects task)
 - [ ] 6.9 Test resume badge on cards with resumable sessions
 - [ ] 6.10 Test task card context menu (Move to column, Move to Top, Copy Name/Path/Prompt, Done & Close Sessions with danger confirm)
 
@@ -61,8 +61,8 @@
 
 ## 8. Task Operations Integration Testing
 
-- [ ] 8.1 Test task creation via PromptBox: title input, column selector, file creation with UUID/YAML/slug
-- [ ] 8.2 Test Claude context prompt content (title, state, path, conditional deadline/blocker)
+- [x] 8.1 Test task creation via PromptBox: title input, column selector, file creation with UUID/YAML/slug
+- [x] 8.2 Test Claude context prompt content (title, state, path, conditional deadline/blocker)
 - [ ] 8.3 Test Claude session rename detection and tab label update
 
 ## 9. Bug Fixes
