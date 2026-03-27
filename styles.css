@@ -254,6 +254,8 @@
    Uses a pseudo-element with a conic-gradient that rotates. */
 .wt-claude-active .wt-session-badge {
   position: relative;
+  overflow: visible;
+  isolation: isolate;
 }
 
 .wt-claude-active .wt-session-badge::before {
@@ -279,6 +281,8 @@
    Uses @property for animatable conic-gradient angle. */
 .wt-claude-idle .wt-session-badge {
   position: relative;
+  overflow: visible;
+  isolation: isolate;
   animation: wt-badge-desaturate 300s linear forwards;
   animation-delay: var(--idle-offset, 0s);
 }
