@@ -172,9 +172,9 @@ export interface AdapterBundle {
   onItemCreated?(path: string, settings: Record<string, unknown>): Promise<void>;
   /**
    * Split an existing item: create a new task file with a related reference
-   * to the source item. Returns the vault path of the new file.
+   * to the source item. Returns the vault path and UUID of the new file.
    */
-  onSplitItem?(sourceItem: WorkItem, columnId: string, settings: Record<string, unknown>): Promise<string | null>;
+  onSplitItem?(sourceItem: WorkItem, columnId: string, settings: Record<string, unknown>): Promise<{ path: string; id: string } | null>;
   /**
    * Transform a detected Claude session rename label before applying it.
    * Called when Claude outputs "Session renamed to: <name>".
@@ -206,7 +206,7 @@ export abstract class BaseAdapter implements AdapterBundle {
     // no-op by default
   }
 
-  async onSplitItem(_sourceItem: WorkItem, _columnId: string, _settings: Record<string, unknown>): Promise<string | null> {
+  async onSplitItem(_sourceItem: WorkItem, _columnId: string, _settings: Record<string, unknown>): Promise<{ path: string; id: string } | null> {
     return null;
   }
 

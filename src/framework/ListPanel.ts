@@ -46,6 +46,9 @@ export class ListPanel {
   private claudeStates: Map<string, string> = new Map();
   private idleSinceMap: Map<string, number> = new Map();
 
+  // Pending split: select + spawn Claude after next render picks up the new item
+  private pendingSplit: { id: string; prompt: string } | null = null;
+
   // Drag state
   private dragSourceId: string | null = null;
   private dragSourceColumn: string | null = null;
@@ -205,6 +208,17 @@ export class ListPanel {
     }
 
     this.applyFilter();
+
+    // Check for pending split: select the new item and spawn Claude
+    if (this.pendingSplit) {
+      const splitItem = this.items.find((i) => i.id === this.pendingSplit!.id);
+      if (splitItem) {
+        const { prompt } = this.pendingSplit;
+        this.pendingSplit = null;
+        this.selectItem(splitItem);
+        this.terminalPanel.spawnClaudeWithPrompt(prompt, "Split scope");
+      }
+    }
   }
 
   private sortItems(items: WorkItem[], columnId: string): WorkItem[] {
@@ -319,23 +333,24 @@ export class ListPanel {
     }
 
     try {
-      const newPath = await this.adapter.onSplitItem(sourceItem, columnId, this.settings);
-      if (!newPath) {
-        console.error("[work-terminal] splitTask: adapter returned no path");
+      const result = await this.adapter.onSplitItem(sourceItem, columnId, this.settings);
+      if (!result) {
+        console.error("[work-terminal] splitTask: adapter returned no result");
         return;
       }
-      console.log(`[work-terminal] Split task created: ${newPath}`);
+      console.log(`[work-terminal] Split task created: ${result.path} (id: ${result.id})`);
 
       // Build the split-scoping prompt
       const prompt =
         `Read the task file at "${sourceItem.path}". ` +
-        `A new split task has been created at "${newPath}" as a sub-scope of the original. ` +
+        `A new split task has been created at "${result.path}" as a sub-scope of the original. ` +
         `Ask the user what the scope of this new split task should be. ` +
         `Once the user answers, immediately update the new task file: ` +
         `set the title, write a brief description with relevant context and references from the original task, ` +
         `and log the scope in the activity log.`;
 
-      await this.terminalPanel.spawnClaudeWithPrompt(prompt, "Split scope");
+      // Defer select + spawn until the vault watcher refreshes and the new item appears
+      this.pendingSplit = { id: result.id, prompt };
     } catch (err) {
       console.error("[work-terminal] splitTask failed:", err);
     }

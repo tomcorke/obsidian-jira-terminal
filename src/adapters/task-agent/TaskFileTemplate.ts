@@ -9,9 +9,10 @@ export interface SplitSource {
 export function generateTaskContent(
   title: string,
   state: KanbanColumn,
-  splitFrom?: SplitSource
+  splitFrom?: SplitSource,
+  existingId?: string
 ): string {
-  const id = crypto.randomUUID();
+  const id = existingId || crypto.randomUUID();
   const now = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
   const dateStr = formatActivityDate(new Date());
 

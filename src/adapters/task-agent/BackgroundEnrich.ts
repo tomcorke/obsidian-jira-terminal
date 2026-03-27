@@ -58,8 +58,9 @@ export async function handleSplitTaskCreated(
   columnId: KanbanColumn,
   basePath: string,
   splitFrom: SplitSource
-): Promise<string> {
-  const content = generateTaskContent(title, columnId, splitFrom);
+): Promise<{ path: string; id: string }> {
+  const id = crypto.randomUUID();
+  const content = generateTaskContent(title, columnId, splitFrom, id);
   const filename = generateTaskFilename(title);
   const folderName = STATE_FOLDER_MAP[columnId] || "todo";
   const folderPath = `${basePath}/${folderName}`;
@@ -73,5 +74,5 @@ export async function handleSplitTaskCreated(
   await app.vault.create(filePath, content);
   console.log(`[work-terminal] Split task created: ${filePath} (from ${splitFrom.filename})`);
 
-  return filePath;
+  return { path: filePath, id };
 }

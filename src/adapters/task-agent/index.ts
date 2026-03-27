@@ -72,7 +72,7 @@ export class TaskAgentAdapter extends BaseAdapter {
     sourceItem: WorkItem,
     columnId: string,
     settings: Record<string, any>
-  ): Promise<string | null> {
+  ): Promise<{ path: string; id: string } | null> {
     if (!this._app) {
       throw new Error("TaskAgentAdapter: app not available (no view opened yet)");
     }
