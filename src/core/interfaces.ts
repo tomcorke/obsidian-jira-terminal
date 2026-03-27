@@ -211,6 +211,12 @@ export interface AdapterBundle {
    * need custom deletion logic). If not implemented, defaults to true.
    */
   onDelete?(item: WorkItem): Promise<boolean>;
+  /**
+   * Return adapter-specific CSS to inject into the document.
+   * Called once during view setup; the framework manages the style
+   * element lifecycle (injection on init, cleanup on close).
+   */
+  getStyles?(): string;
 }
 
 /**

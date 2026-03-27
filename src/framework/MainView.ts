@@ -50,6 +50,9 @@ export class MainView extends ItemView {
   // Cached parser instance (created once in initPanels, reused in refreshList)
   private parser: WorkItemParser | null = null;
 
+  // Adapter-contributed style element
+  private adapterStyleEl: HTMLStyleElement | null = null;
+
   // Resize observer for terminal refit on view switch
   private containerObserver: ResizeObserver | null = null;
 
@@ -238,6 +241,17 @@ export class MainView extends ItemView {
 
     // Allow adapter to perform async initialization (credential fetch, API sync, etc.)
     await this.adapter.onLoad?.(this.app, settings);
+
+    // Inject adapter-contributed CSS
+    if (typeof this.adapter.getStyles === "function") {
+      const css = this.adapter.getStyles();
+      if (css) {
+        this.adapterStyleEl = document.createElement("style");
+        this.adapterStyleEl.setAttribute("data-work-terminal-adapter", "true");
+        this.adapterStyleEl.textContent = css;
+        document.head.appendChild(this.adapterStyleEl);
+      }
+    }
 
     // Provide adapters with a way to trigger UI refresh (e.g. after API fetch)
     this.adapter.requestRefresh = () => this.scheduleRefresh();
@@ -509,6 +523,12 @@ export class MainView extends ItemView {
 
     // Clean up resize observer
     this.containerObserver?.disconnect();
+
+    // Clean up adapter-contributed CSS
+    if (this.adapterStyleEl) {
+      this.adapterStyleEl.remove();
+      this.adapterStyleEl = null;
+    }
 
     // Clear adapter refresh callback to prevent refreshes against disposed DOM
     this.adapter.requestRefresh = undefined;
