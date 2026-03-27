@@ -356,10 +356,12 @@ export class ListPanel {
     }
   }
 
-  private async deleteItem(item: WorkItem): Promise<void> {
-    const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
-    if (!file) return;
-    await this.app.vault.trash(file, false);
+  private deleteItem(item: WorkItem): void {
+    new DangerConfirm(this.app, `Delete "${item.title}"`, async () => {
+      const file = this.app.vault.getAbstractFileByPath(item.path) as TFile;
+      if (!file) return;
+      await this.app.vault.trash(file, false);
+    }).open();
   }
 
   // ---------------------------------------------------------------------------
