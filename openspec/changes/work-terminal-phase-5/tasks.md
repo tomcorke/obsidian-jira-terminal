@@ -18,20 +18,20 @@
 ## 3. Terminal Core Integration Testing
 
 - [x] 3.1 Test PTY spawning: open Shell tab, verify interactive shell with correct cwd
-- [ ] 3.2 Test keyboard interception: verify Option+Arrow, Shift+Enter, Option+Backspace in terminal
+- [x] 3.2 Test keyboard interception: verify Option+Arrow, Shift+Enter, Option+Backspace in terminal
 - [x] 3.3 Test resize protocol: resize panel, verify terminal dimensions update via OSC sequence
 - [x] 3.4 Test xterm CSS injection and rendering
-- [ ] 3.5 Test scroll-to-bottom button appearance on scroll-up
+- [x] 3.5 Test scroll-to-bottom button appearance on scroll-up
 - [x] 3.6 Test 3s keep-alive on early process exit
 - [x] 3.7 Test Claude spawning: open Claude tab, verify binary resolution and PATH augmentation
 
 ## 4. Tab Management Integration Testing
 
 - [x] 4.1 Test tab bar layout: max-width tabs, ellipsis, action buttons pinned right
-- [ ] 4.2 Test tab drag-and-drop reordering with accent border indicator
-- [ ] 4.3 Test tab context menu (Rename, Restart Task Agent, Move to Task)
+- [x] 4.2 Test tab drag-and-drop reordering with accent border indicator
+- [x] 4.3 Test tab context menu (Rename, Restart Task Agent, Move to Task)
 - [x] 4.4 Test active tab memory per work item (switch items, verify tab restored)
-- [ ] 4.5 Test tab inline rename with armed-blur focus pattern
+- [x] 4.5 Test tab inline rename with armed-blur focus pattern
 
 ## 5. Session Persistence Integration Testing
 
@@ -43,21 +43,21 @@
 ## 6. Task List Integration Testing
 
 - [x] 6.1 Test collapsible sections render (Priority, Active, To Do, Done - Done collapsed)
-- [ ] 6.2 Test within-section drag reordering with blue indicator and UUID-keyed persistence
-- [ ] 6.3 Test cross-section drag for state changes with position respect
+- [x] 6.2 Test within-section drag reordering with blue indicator and UUID-keyed persistence
+- [x] 6.3 Test cross-section drag for state changes with position respect
 - [x] 6.4 Test session count badges on cards
 - [ ] 6.5 Test Claude state indicators (active: green spinner, waiting: amber glow, idle: depleting arc with --idle-offset continuity)
 - [ ] 6.6 Test suppress-waiting-on-visible-tabs behaviour
 - [x] 6.7 Test filter input with case-insensitive 100ms debounce
 - [x] 6.8 Test move-to-top button (hover reveal, moves to top, selects task)
 - [ ] 6.9 Test resume badge on cards with resumable sessions
-- [ ] 6.10 Test task card context menu (Move to column, Move to Top, Copy Name/Path/Prompt, Done & Close Sessions with danger confirm)
+- [x] 6.10 Test task card context menu (Move to column, Move to Top, Copy Name/Path/Prompt, Done & Close Sessions with danger confirm)
 
 ## 7. Layout & Detail Integration Testing
 
 - [x] 7.1 Test 2-panel resizable split with draggable divider
 - [x] 7.2 Test detail panel: select task, verify MarkdownView via createLeafBySplit with live preview
-- [ ] 7.3 Test rename detection: rename task file via shell, verify 2s UUID-matching window updates state
+- [x] 7.3 Test rename detection: rename task file via shell, verify 2s UUID-matching window updates state
 
 ## 8. Task Operations Integration Testing
 
@@ -71,5 +71,11 @@
   - [x] 9.1a Fix detail panel creating duplicate leaves (TaskDetailView survival check used getLeavesOfType("markdown") but freshly-split leaf starts as "empty" type; changed to parent-based check + re-entrancy guard)
   - [x] 9.1b Fix Claude spawn not including binary in commandArgs (buildClaudeArgs returned only flags like --session-id, pty-wrapper received args without the claude command; prepended resolved command path to args array in spawnClaude, spawnClaudeWithContext, and resumeSession)
   - [x] 9.1c Fix hot-reload not recovering sessions: (1) hotReload now explicitly stashes before disable, (2) onClose skips re-stash if store already exists, (3) activateView called after enablePlugin to trigger onOpen on new instance, (4) recovery selection moved after refreshList so cards exist
+  - [x] 9.1d Fix scroll-to-bottom button: missing CSS + native scroll listener on viewport
+  - [x] 9.1e Fix within-section drag reorder: full order from sortItems + remove off-by-one adjustment
+  - [x] 9.1f Fix cross-section drag drop position: build full order before inserting at drop index
+  - [x] 9.1g Fix duplicate context menu items: delegate full menu to adapter's getContextMenuItems
+  - [x] 9.1h Fix Claude state indicator CSS: green arc spinner, amber glow, idle depletion arc
+  - [x] 9.1i Port safeFit from original: skip fitAddon.fit() when container < 200px to prevent narrow terminal reflow
 - [x] 9.2 Re-run failed test cases after fixes to verify resolution
 - [ ] 9.3 Final pass: run through complete regression test document, mark all statuses

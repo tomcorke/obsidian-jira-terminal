@@ -37,6 +37,11 @@ export class TerminalTab {
   private fitAddon: FitAddon;
   private resizeObserver: ResizeObserver;
   private _documentCleanups: (() => void)[] = [];
+
+  // Minimum container width for fitAddon.fit(). When the plugin view is
+  // momentarily narrow (e.g. switching between plugins), skip the fit so the
+  // terminal keeps its last good dimensions and content doesn't reflow.
+  private static MIN_FIT_WIDTH = 200;
   private cwd: string = "";
   private spawnTime = 0;
 
@@ -126,7 +131,7 @@ export class TerminalTab {
     let spawned = false;
 
     const spawnWithFit = () => {
-      try { this.fitAddon.fit(); } catch { /* ignore */ }
+      this.safeFit();
       if (spawned) return;
       spawned = true;
 
@@ -163,11 +168,7 @@ export class TerminalTab {
       if (this.containerEl.hasClass("hidden")) return;
       requestAnimationFrame(() => {
         if (this.containerEl.hasClass("hidden")) return;
-        try {
-          this.fitAddon.fit();
-        } catch {
-          // ignore fit errors during cleanup
-        }
+        this.safeFit();
       });
     });
     this.resizeObserver.observe(this.containerEl);
@@ -212,6 +213,17 @@ export class TerminalTab {
   // ---------------------------------------------------------------------------
   // PTY spawn
   // ---------------------------------------------------------------------------
+
+  /** Call fitAddon.fit() only if the container is wide enough.
+   *  When the container is too narrow, the terminal keeps its last
+   *  good dimensions and content doesn't reflow. */
+  private safeFit(): void {
+    try {
+      const width = this.containerEl.clientWidth;
+      if (width < TerminalTab.MIN_FIT_WIDTH) return;
+      this.fitAddon.fit();
+    } catch { /* ignore fit errors during cleanup */ }
+  }
 
   private spawnPty(cols: number, rows: number, command?: string[]): ChildProcess {
     const cp = electronRequire("child_process") as typeof import("child_process");
@@ -300,7 +312,7 @@ export class TerminalTab {
     // second frame has correct dimensions for fitAddon to measure.
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
-        this.fitAddon.fit();
+        this.safeFit();
         this.terminal.scrollToBottom();
         this.terminal.focus();
       });
@@ -314,7 +326,7 @@ export class TerminalTab {
   refit(): void {
     if (this.containerEl.hasClass("hidden")) return;
     requestAnimationFrame(() => {
-      try { this.fitAddon.fit(); } catch { /* ignore */ }
+      this.safeFit();
     });
   }
 
