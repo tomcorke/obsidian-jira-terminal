@@ -14,7 +14,7 @@ function cdpEval(expression) {
       res.on('end', () => {
         try {
           const targets = JSON.parse(data);
-          const target = targets.find((t) => t.type === 'page');
+          const target = targets.find((t) => t.type === 'page' && t.title && t.title.includes('Obsidian'));
           if (!target) return reject(new Error('No page target found'));
           const wsUrl = target.webSocketDebuggerUrl;
           if (!wsUrl) return reject(new Error('No WebSocket URL'));

@@ -420,18 +420,19 @@ export class ListPanel {
   }
 
   private reorderWithinSection(columnId: string, itemId: string, targetIndex: number): void {
-    const colItems = this.groups[columnId] || [];
-    const order = this.customOrder[columnId] || colItems.map((i) => i.id);
+    // Build the full current visual order: items already in customOrder first,
+    // then remaining items in their default sort order. This ensures ALL items
+    // in the section are tracked, not just previously-ordered ones.
+    const colItems = this.sortItems(this.groups[columnId] || [], columnId);
+    const order = colItems.map((i) => i.id);
 
     const fromIndex = order.indexOf(itemId);
-    if (fromIndex < 0) {
-      // Item not in custom order yet - add it
-      order.splice(targetIndex, 0, itemId);
-    } else {
-      order.splice(fromIndex, 1);
-      const adjustedTarget = fromIndex < targetIndex ? targetIndex - 1 : targetIndex;
-      order.splice(adjustedTarget, 0, itemId);
-    }
+    if (fromIndex < 0) return; // Item not in this section
+
+    // getDropIndex counts cards excluding the dragged one, so targetIndex
+    // is already in the "after removal" index space - no adjustment needed.
+    order.splice(fromIndex, 1);
+    order.splice(targetIndex, 0, itemId);
 
     this.customOrder[columnId] = order;
     this.onCustomOrderChange(this.customOrder);
