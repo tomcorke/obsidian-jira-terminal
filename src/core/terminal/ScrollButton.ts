@@ -1,0 +1,34 @@
+/**
+ * Scroll-to-bottom overlay button for xterm.js terminals.
+ *
+ * Shows a down-arrow button when the terminal viewport is scrolled up,
+ * hides when at the bottom. Clicking scrolls to bottom and focuses.
+ */
+import type { Terminal } from "@xterm/xterm";
+
+export function attachScrollButton(containerEl: HTMLElement, terminal: Terminal): void {
+  // Remove any existing button (e.g. from a previous reload)
+  containerEl.querySelector(".wt-scroll-bottom")?.remove();
+
+  const scrollBtn = document.createElement("button");
+  scrollBtn.className = "wt-scroll-bottom";
+  scrollBtn.setAttribute("aria-label", "Scroll to bottom");
+  scrollBtn.innerHTML = "&#x2193;";
+  scrollBtn.style.display = "none";
+  containerEl.appendChild(scrollBtn);
+
+  const updateVisibility = () => {
+    const buf = terminal.buffer.active;
+    const atBottom = buf.viewportY >= buf.baseY;
+    scrollBtn.style.display = atBottom ? "none" : "flex";
+  };
+
+  terminal.onScroll(updateVisibility);
+  terminal.onWriteParsed(updateVisibility);
+
+  scrollBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    terminal.scrollToBottom();
+    terminal.focus();
+  });
+}

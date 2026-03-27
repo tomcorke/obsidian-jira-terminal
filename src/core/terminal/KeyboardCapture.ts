@@ -1,0 +1,82 @@
+/**
+ * Two-layer keyboard interception for xterm.js in Obsidian.
+ *
+ * Layer 1 (bubble phase): stopPropagation on the container element to prevent
+ * Obsidian's bubble-phase handlers from intercepting keyboard events after
+ * xterm processes them.
+ *
+ * Layer 2 (capture phase): intercept specific modifier combos on document
+ * (capture phase) before Obsidian sees them. Synthesizes terminal escape
+ * sequences directly to PTY stdin, then kills the event entirely.
+ */
+import type { ChildProcess } from "child_process";
+
+/**
+ * Attach bubble-phase keyboard interception on a container element.
+ * Prevents Obsidian from receiving keydown/keyup events that bubble up
+ * from the terminal.
+ */
+export function attachBubbleCapture(containerEl: HTMLElement): void {
+  containerEl.addEventListener("keydown", (e: KeyboardEvent) => {
+    e.stopPropagation();
+  }, false);
+  containerEl.addEventListener("keyup", (e: KeyboardEvent) => {
+    e.stopPropagation();
+  }, false);
+}
+
+/**
+ * Attach capture-phase keyboard interception on document for modifier combos
+ * that Obsidian steals in its own capture-phase handlers.
+ *
+ * Only acts when the terminal's hidden textarea is the active element,
+ * ensuring we don't block keyboard events for other UI elements.
+ *
+ * @returns A cleanup function that removes the document listener.
+ */
+export function attachCapturePhase(
+  containerEl: HTMLElement,
+  getProcess: () => ChildProcess | null
+): () => void {
+  const textareaEl = containerEl.querySelector(
+    ".xterm-helper-textarea"
+  ) as HTMLTextAreaElement | null;
+
+  const handler = (e: KeyboardEvent) => {
+    if (!textareaEl || document.activeElement !== textareaEl) return;
+
+    let seq: string | null = null;
+
+    if (e.key === "Enter" && e.shiftKey) {
+      // Shift+Enter: CSI u encoding so Claude CLI sees it as distinct from Enter
+      seq = "\x1b[13;2u";
+    } else if (e.altKey && e.key === "ArrowLeft") {
+      // ESC b - word backward
+      seq = "\x1bb";
+    } else if (e.altKey && e.key === "ArrowRight") {
+      // ESC f - word forward
+      seq = "\x1bf";
+    } else if (e.altKey && e.key === "Backspace") {
+      // ESC DEL - delete word backward
+      seq = "\x1b\x7f";
+    } else if (e.altKey && e.key === "d") {
+      // ESC d - delete word forward
+      seq = "\x1bd";
+    }
+
+    if (seq) {
+      const proc = getProcess();
+      if (proc?.stdin && !proc.stdin.destroyed) {
+        proc.stdin.write(seq);
+      }
+      e.stopImmediatePropagation();
+      e.preventDefault();
+    }
+  };
+
+  document.addEventListener("keydown", handler, true);
+
+  return () => {
+    document.removeEventListener("keydown", handler, true);
+  };
+}
