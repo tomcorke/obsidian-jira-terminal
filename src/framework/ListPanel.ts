@@ -46,6 +46,9 @@ export class ListPanel {
   private claudeStates: Map<string, string> = new Map();
   private idleSinceMap: Map<string, number> = new Map();
 
+  // Background enrichment tracking
+  private ingestingIds: Set<string> = new Set();
+
   // Pending split: select + spawn Claude after next render picks up the new item
   private pendingSplit: { id: string; prompt: string } | null = null;
 
@@ -195,6 +198,13 @@ export class ListPanel {
         // Resume badge
         this.renderResumeBadge(cardEl, item);
 
+        // Ingesting badge
+        if (this.ingestingIds.has(item.id)) {
+          cardEl.addClass("wt-card-ingesting");
+          const badge = cardEl.createSpan({ cls: "wt-ingesting-badge" });
+          badge.textContent = "ingesting\u2026";
+        }
+
         cardsEl.appendChild(cardEl);
       }
 
@@ -292,6 +302,28 @@ export class ListPanel {
     this.onCustomOrderChange(this.customOrder);
     this.render(this.groups, this.customOrder);
     this.selectItem(item);
+  }
+
+  setIngesting(id: string): void {
+    this.ingestingIds.add(id);
+    // Update existing card if already rendered
+    const cardEl = this.listEl.querySelector(`[data-item-id="${id}"]`);
+    if (cardEl && !cardEl.querySelector(".wt-ingesting-badge")) {
+      cardEl.addClass("wt-card-ingesting");
+      const badge = document.createElement("span");
+      badge.className = "wt-ingesting-badge";
+      badge.textContent = "ingesting\u2026";
+      cardEl.appendChild(badge);
+    }
+  }
+
+  clearIngesting(id: string): void {
+    this.ingestingIds.delete(id);
+    const cardEl = this.listEl.querySelector(`[data-item-id="${id}"]`);
+    if (cardEl) {
+      cardEl.removeClass("wt-card-ingesting");
+      cardEl.querySelector(".wt-ingesting-badge")?.remove();
+    }
   }
 
   prependToColumn(id: string, columnId: string): void {

@@ -241,9 +241,16 @@ export class MainView extends ItemView {
         // Placeholder resolution callback
         this.listPanel?.resolvePlaceholder(path, success);
       },
-      (id: string, columnId: string) => {
-        // New item created - prepend to top of column
+      (id: string, columnId: string, enrichmentDone?: Promise<void>) => {
+        // New item created - prepend to top of column and track enrichment
         this.listPanel?.prependToColumn(id, columnId);
+        if (enrichmentDone) {
+          this.listPanel?.setIngesting(id);
+          enrichmentDone.then(
+            () => this.listPanel?.clearIngesting(id),
+            () => this.listPanel?.clearIngesting(id)
+          );
+        }
       }
     );
 

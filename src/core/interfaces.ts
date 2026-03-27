@@ -167,10 +167,10 @@ export interface AdapterBundle {
   detachDetailView?(): void;
   /**
    * Called after a new item is created via the PromptBox. Creates the file
-   * and kicks off background enrichment. Returns the new item's UUID and column
-   * so the framework can prepend it to the custom order.
+   * and kicks off background enrichment. Returns the new item's UUID, column,
+   * and an enrichmentDone promise for tracking when background work finishes.
    */
-  onItemCreated?(title: string, settings: Record<string, unknown>): Promise<{ id: string; columnId: string } | void>;
+  onItemCreated?(title: string, settings: Record<string, unknown>): Promise<{ id: string; columnId: string; enrichmentDone?: Promise<void> } | void>;
   /**
    * Split an existing item: create a new task file with a related reference
    * to the source item. Returns the vault path and UUID of the new file.
@@ -203,7 +203,7 @@ export abstract class BaseAdapter implements AdapterBundle {
     // no-op by default
   }
 
-  async onItemCreated(_title: string, _settings: Record<string, unknown>): Promise<{ id: string; columnId: string } | void> {
+  async onItemCreated(_title: string, _settings: Record<string, unknown>): Promise<{ id: string; columnId: string; enrichmentDone?: Promise<void> } | void> {
     // no-op by default
   }
 

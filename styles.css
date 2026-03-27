@@ -540,11 +540,11 @@
   font-size: 12px;
   border: 1px dashed var(--background-modifier-border);
   border-radius: 4px;
-  background: transparent !important;
+  background: transparent;
   color: var(--text-muted);
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: none !important;
+  box-shadow: none;
 }
 
 .wt-spawn-btn:hover {
@@ -552,22 +552,44 @@
   color: var(--text-normal);
 }
 
-.wt-spawn-claude {
-  border-color: #C15F3C;
-  color: #C15F3C;
-}
-
-.wt-spawn-claude:hover {
-  background: rgba(193, 95, 60, 0.1);
-}
-
+.wt-spawn-claude,
 .wt-spawn-claude-ctx {
+  display: flex;
+  align-items: center;
+}
+
+button.wt-spawn-claude {
   border-color: #C15F3C;
+}
+
+button.wt-spawn-claude svg {
   color: #C15F3C;
 }
 
-.wt-spawn-claude-ctx:hover {
-  background: rgba(193, 95, 60, 0.1);
+button.wt-spawn-claude:hover {
+  background: #C15F3C;
+  color: white;
+}
+
+button.wt-spawn-claude:hover svg {
+  color: white;
+}
+
+button.wt-spawn-claude-ctx {
+  border-color: #30a46c;
+}
+
+button.wt-spawn-claude-ctx svg {
+  color: #30a46c;
+}
+
+button.wt-spawn-claude-ctx:hover {
+  background: #30a46c;
+  color: white;
+}
+
+button.wt-spawn-claude-ctx:hover svg {
+  color: white;
 }
 
 /* =============================================================================
@@ -717,6 +739,62 @@
 }
 
 /* =============================================================================
+   Terminal search bar (Cmd+F)
+   ============================================================================= */
+
+.wt-search-bar {
+  position: absolute;
+  top: 6px;
+  right: 16px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.wt-search-input {
+  width: 180px;
+  padding: 3px 6px;
+  font-size: 12px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 4px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  outline: none;
+}
+
+.wt-search-input:focus {
+  border-color: var(--interactive-accent);
+}
+
+.wt-search-nav,
+.wt-search-close {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+}
+
+.wt-search-nav:hover,
+.wt-search-close:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* =============================================================================
    Danger confirm
    ============================================================================= */
 
@@ -725,4 +803,21 @@
   gap: 8px;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+/* Ingesting indicator */
+.wt-ingesting-badge {
+  display: inline-block;
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 3px;
+  background: var(--background-modifier-hover);
+  color: var(--text-muted);
+  animation: wt-ingesting-pulse 1.5s ease-in-out infinite;
+  margin-left: 4px;
+}
+
+@keyframes wt-ingesting-pulse {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }

@@ -23,16 +23,21 @@ function resolveFullPath(app: App, vaultRelativePath: string): string {
   return `${resolveVaultPath(app)}/${vaultRelativePath}`;
 }
 
+export interface ItemCreatedResult {
+  id: string;
+  columnId: string;
+  enrichmentDone: Promise<void>;
+}
+
 export async function handleItemCreated(
   app: App,
   title: string,
   settings: Record<string, any>
-): Promise<{ id: string; columnId: string }> {
+): Promise<ItemCreatedResult> {
   const columnId = (settings._columnId || "todo") as KanbanColumn;
   const basePath = settings["adapter.taskBasePath"] || "2 - Areas/Tasks";
   const claudeCommand = settings["core.claudeCommand"] || "claude";
 
-  // Generate file content with a pending filename (Claude will rename after enrichment)
   const id = crypto.randomUUID();
   const content = generateTaskContent(title, columnId, undefined, id);
   const filename = generatePendingFilename();
@@ -40,17 +45,15 @@ export async function handleItemCreated(
   const folderPath = `${basePath}/${folderName}`;
   const filePath = `${folderPath}/${filename}`;
 
-  // Ensure target folder exists
   const folder = app.vault.getAbstractFileByPath(folderPath);
   if (!folder) {
     await app.vault.createFolder(folderPath);
   }
 
-  // Create the task file
   await app.vault.create(filePath, content);
   console.log(`[work-terminal] Task created: ${filePath}`);
 
-  // Fire-and-forget background enrichment (don't block the UI)
+  // Background enrichment - returns a promise the caller can track
   const fullPath = resolveFullPath(app, filePath);
   const enrichPrompt =
     `/tc-tasks:task-agent --fast The task file at ${fullPath} was just created with minimal data. ` +
@@ -58,7 +61,7 @@ export async function handleItemCreated(
     RENAME_INSTRUCTION;
 
   const home = process.env.HOME || "/";
-  spawnHeadlessClaude(enrichPrompt, home, claudeCommand).then(
+  const enrichmentDone = spawnHeadlessClaude(enrichPrompt, home, claudeCommand).then(
     (result) => {
       if (result.exitCode === 0) {
         console.log(`[work-terminal] Background enrich completed: ${filePath}`);
@@ -74,7 +77,7 @@ export async function handleItemCreated(
     }
   );
 
-  return { id, columnId };
+  return { id, columnId, enrichmentDone };
 }
 
 export async function handleSplitTaskCreated(
