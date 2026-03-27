@@ -8,8 +8,8 @@ export const TASK_AGENT_CONFIG: PluginConfig = {
     folderName: STATE_FOLDER_MAP[col],
   })),
   creationColumns: [
-    { id: "todo", label: "To Do", default: true },
-    { id: "active", label: "Active" },
+    { id: "todo", label: "To Do" },
+    { id: "active", label: "Active", default: true },
   ],
   settingsSchema: [
     {
