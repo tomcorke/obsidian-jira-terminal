@@ -465,7 +465,13 @@
 
 /* Tab Claude state classes */
 .wt-tab-claude-waiting {
-  background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.15));
+  background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.35));
+  animation: wt-tab-waiting-pulse 2s ease-in-out infinite;
+}
+
+@keyframes wt-tab-waiting-pulse {
+  0%, 100% { background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.2)); }
+  50% { background: linear-gradient(90deg, transparent, rgba(214, 158, 46, 0.45)); }
 }
 
 .wt-tab-claude-active .wt-tab-label::before {

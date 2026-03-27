@@ -75,6 +75,7 @@ export class TerminalPanelView {
     };
     this.tabManager.onClaudeStateChange = (itemId: string, state: ClaudeState) => {
       this.onClaudeStateChange(itemId, state);
+      this.updateTabStateClasses();
     };
     this.tabManager.onPersistRequest = () => {
       this.persistSessions();
@@ -158,6 +159,23 @@ export class TerminalPanelView {
     if (this.settings["core.additionalAgentContext"]) {
       const claudeCtxBtn = buttonsContainer.createEl("button", { cls: "wt-spawn-btn wt-spawn-claude-ctx", text: "+ Claude (ctx)" });
       claudeCtxBtn.addEventListener("click", () => this.spawnClaudeWithContext());
+    }
+  }
+
+  /** Update Claude state classes on existing tab elements without full re-render. */
+  private updateTabStateClasses(): void {
+    const activeItemId = this.tabManager.getActiveItemId();
+    if (!activeItemId) return;
+    const tabs = this.tabManager.getTabs(activeItemId);
+    const tabEls = this.tabBarEl.querySelectorAll(".wt-tab");
+    const stateClasses = ["wt-tab-claude-waiting", "wt-tab-claude-active", "wt-tab-claude-idle"];
+    for (let i = 0; i < tabs.length && i < tabEls.length; i++) {
+      const el = tabEls[i] as HTMLElement;
+      for (const cls of stateClasses) el.removeClass(cls);
+      if (tabs[i].isClaudeSession) {
+        const state = tabs[i].claudeState;
+        if (state !== "inactive") el.addClass(`wt-tab-claude-${state}`);
+      }
     }
   }
 
